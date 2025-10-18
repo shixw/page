@@ -2,8 +2,22 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="单词拼写测试">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#3498db">
+
     <title>英语单词拼写测试 - 小学3-4年级</title>
+
+      <!-- 重新设计的苹果设备图标 -->
+    <link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgdmlld0JveD0iMCAwIDE5MiAxOTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjE5MiIgaGVpZ2h0PSIxOTIiIHJ4PSIzNiIgZmlsbD0iIzM0OThEQiIvPjxwYXRoIGQ9Ik03NiA2MEgxMTZWNzZINzZWNjBaIiBmaWxsPSJ3aGl0ZSIvPjxwYXRoIGQ9Ik02NCA4NEgxMjhWMTA4SDY0Vjg0WiIgZmlsbD0id2hpdGUiLz48cGF0aCBkPSJNODggMTI0SDEwOFYxMzZIODhWMTI0WiIgZmlsbD0id2hpdGUiLz48L3N2Zz4=">
+    
+    <!-- 重新设计的网站图标 -->
+    <link rel="icon" type="image/png" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHJ4PSI2IiBmaWxsPSIjMzQ5OERCIi8+PHBhdGggZD0iTTEwIDEyaDEydjRIMTB2LTRaIiBmaWxsPSJ3aGl0ZSIvPjxwYXRoIGQ9Ik04IDE2aDE2djZIOHYtNloiIGZpbGw9IndoaXRlIi8+PHBhdGggZD0iTTE0IDIyaDR2MkgxNHYtMloiIGZpbGw9IndoaXRlIi8+PC9zdmc+">
+    
     <style>
         * {
             box-sizing: border-box;
@@ -394,6 +408,39 @@
             .blank-char, .shown-char {
                 width: 30px;
                 font-size: 20px;
+            }
+        }
+
+        /* 为iOS设备优化按钮样式 */
+        button {
+            -webkit-appearance: none;
+            -webkit-tap-highlight-color: transparent;
+            min-height: 44px; /* iOS推荐的最小触摸目标尺寸 */
+        }
+        
+        input {
+            -webkit-appearance: none;
+            -webkit-tap-highlight-color: transparent;
+            min-height: 44px; /* iOS推荐的最小触摸目标尺寸 */
+        }
+        
+        /* 防止iOS Safari缩放 */
+        @media screen and (max-width: 768px) {
+            body {
+                font-size: 16px; /* 防止iOS Safari自动缩放 */
+            }
+        }
+        
+        /* 为添加到主屏幕的应用优化 */
+        @media all and (display-mode: standalone) {
+            body {
+                padding: 10px;
+            }
+            
+            .container {
+                border-radius: 0;
+                box-shadow: none;
+                min-height: 100vh;
             }
         }
     </style>
@@ -965,6 +1012,12 @@
             
             // 初始状态
             updateProgressText();
+
+            // 检测是否在独立应用中运行
+            if (window.matchMedia('(display-mode: standalone)').matches) {
+                console.log('运行在独立应用中');
+                document.body.classList.add('standalone');
+            }
         }
 
         // 设置模式
