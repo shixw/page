@@ -874,7 +874,7 @@ const words = [
             
             if (start < 1) startRangeInput.value = 1;
             if (end > 10000) endRangeInput.value = 10000;
-            if (start > end) startRangeInput.value = end;
+            if (start > end) endRangeInput.value = start;
             
             updateProgressText();
         }
