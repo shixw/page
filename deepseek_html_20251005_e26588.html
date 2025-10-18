@@ -176,6 +176,37 @@
             min-height: 60px;
         }
         
+        .blank-word-display {
+            font-size: 36px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #2c3e50;
+            min-height: 60px;
+            letter-spacing: 2px;
+        }
+        
+        .blank-char {
+            display: inline-block;
+            width: 40px;
+            height: 50px;
+            border-bottom: 3px solid #3498db;
+            margin: 0 5px;
+            text-align: center;
+            line-height: 50px;
+            font-size: 24px;
+            color: #e74c3c;
+        }
+        
+        .shown-char {
+            display: inline-block;
+            width: 40px;
+            margin: 0 5px;
+            text-align: center;
+            line-height: 50px;
+            font-size: 24px;
+            color: #2c3e50;
+        }
+        
         .answer-area {
             width: 100%;
             max-width: 500px;
@@ -187,6 +218,44 @@
             color: #e74c3c;
             margin-bottom: 10px;
             min-height: 50px;
+        }
+        
+        .user-input-area {
+            margin: 20px 0;
+        }
+        
+        .user-input {
+            font-size: 24px;
+            padding: 10px 15px;
+            border: 2px solid #3498db;
+            border-radius: 8px;
+            text-align: center;
+            width: 200px;
+            margin: 0 auto;
+        }
+        
+        .check-btn {
+            background-color: #2ecc71;
+            color: white;
+            margin-top: 10px;
+        }
+        
+        .check-btn:hover {
+            background-color: #27ae60;
+        }
+        
+        .result-feedback {
+            margin-top: 15px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        
+        .correct {
+            color: #27ae60;
+        }
+        
+        .incorrect {
+            color: #e74c3c;
         }
         
         .word-info {
@@ -216,6 +285,30 @@
         .phonetic {
             font-family: 'Arial', sans-serif;
             color: #7d3c98;
+        }
+        
+        .phonics-info {
+            background-color: #e8f6f3;
+            border-left: 4px solid #1abc9c;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 4px;
+        }
+        
+        .phonics-regular {
+            color: #27ae60;
+            font-weight: bold;
+        }
+        
+        .phonics-irregular {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        
+        .phonics-tip {
+            margin-top: 5px;
+            font-style: italic;
+            color: #7f8c8d;
         }
         
         .hidden {
@@ -293,6 +386,15 @@
             .answer-display {
                 font-size: 28px;
             }
+            
+            .blank-word-display {
+                font-size: 28px;
+            }
+            
+            .blank-char, .shown-char {
+                width: 30px;
+                font-size: 20px;
+            }
         }
     </style>
 </head>
@@ -305,6 +407,7 @@
             <div class="mode-selector">
                 <button id="practice-mode" class="mode-btn active">练习模式</button>
                 <button id="exam-mode" class="mode-btn">考试模式</button>
+                <button id="blank-mode" class="mode-btn">填空模式</button>
             </div>
             
             <div class="range-selector">
@@ -332,7 +435,19 @@
         </div>
         
         <div class="quiz-area">
+            <!-- 普通模式显示 -->
             <div class="word-display" id="word-display">?</div>
+            
+            <!-- 填空模式显示 -->
+            <div class="blank-word-display hidden" id="blank-word-display"></div>
+            
+            <!-- 用户输入区域（填空模式使用） -->
+            <div class="user-input-area hidden" id="user-input-area">
+                <input type="text" class="user-input" id="user-input" placeholder="输入完整单词">
+                <button class="check-btn" id="check-btn">检查答案</button>
+                <div class="result-feedback" id="result-feedback"></div>
+            </div>
+            
             <div class="answer-area">
                 <div class="answer-display" id="answer-display"></div>
                 <div class="word-info" id="word-info">
@@ -348,6 +463,10 @@
                         <span class="word-info-label">中文:</span>
                         <span class="word-info-value" id="word-meaning"></span>
                     </div>
+                    <div class="word-info-item">
+                        <span class="word-info-label">自然拼读:</span>
+                        <span class="word-info-value" id="word-phonics"></span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -362,423 +481,424 @@
         <div class="instructions">
             <h3>使用说明</h3>
             <ol>
-                <li>选择练习模式或考试模式</li>
+                <li>选择练习模式、考试模式或填空模式</li>
                 <li>选择要测试的单词范围（1-10000）</li>
                 <li>点击"开始测试"按钮开始</li>
+                <li>在填空模式下，根据显示的字母填空完整单词</li>
                 <li>点击"下一个单词"按钮会自动朗读单词</li>
-                <li>尝试拼写听到的单词</li>
                 <li>在练习模式下，默认显示答案，点击"隐藏答案"按钮可隐藏</li>
                 <li>在考试模式下，默认隐藏答案，点击"显示答案"按钮可查看</li>
                 <li>如果拼写错误，点击"标记错误"按钮将该单词加入复习列表</li>
                 <li>点击"朗读单词"按钮可以再次听单词发音</li>
+                <li>查看自然拼读信息，了解单词发音规律</li>
             </ol>
         </div>
     </div>
 
     <script>
-        // 单词数据（包含序号、单词、音标和中文含义）
-       // 单词数据（包含序号、单词、音标和中文含义）
-const words = [
-    {id: 1, word: "for", phonetic: "/fɔːr/", meaning: "为，给，对于"},
-    {id: 2, word: "say", phonetic: "/seɪ/", meaning: "说，讲"},
-    {id: 3, word: "will", phonetic: "/wɪl/", meaning: "将，愿意，意志"},
-    {id: 4, word: "think", phonetic: "/θɪŋk/", meaning: "想，认为"},
-    {id: 5, word: "take", phonetic: "/teɪk/", meaning: "拿，取，接受"},
-    {id: 6, word: "than", phonetic: "/ðæn/", meaning: "比"},
-    {id: 7, word: "our", phonetic: "/ˈaʊər/", meaning: "我们的"},
-    {id: 8, word: "thing", phonetic: "/θɪŋ/", meaning: "事物，东西"},
-    {id: 9, word: "any", phonetic: "/ˈeni/", meaning: "任何"},
-    {id: 10, word: "after", phonetic: "/ˈæftər/", meaning: "在...之后"},
-    {id: 11, word: "last", phonetic: "/læst/", meaning: "最后，持续"},
-    {id: 12, word: "become", phonetic: "/bɪˈkʌm/", meaning: "成为，变得"},
-    {id: 13, word: "keep", phonetic: "/kiːp/", meaning: "保持，继续"},
-    {id: 14, word: "start", phonetic: "/stɑːrt/", meaning: "开始，出发"},
-    {id: 15, word: "place", phonetic: "/pleɪs/", meaning: "地方，放置"},
-    {id: 16, word: "each", phonetic: "/iːtʃ/", meaning: "每个"},
-    {id: 17, word: "off", phonetic: "/ɔːf/", meaning: "离开，关闭"},
-    {id: 18, word: "point", phonetic: "/pɔɪnt/", meaning: "点，指向"},
-    {id: 19, word: "before", phonetic: "/bɪˈfɔːr/", meaning: "在...之前"},
-    {id: 20, word: "must", phonetic: "/mʌst/", meaning: "必须"},
-    {id: 21, word: "though", phonetic: "/ðoʊ/", meaning: "虽然，尽管"},
-    {id: 22, word: "provide", phonetic: "/prəˈvaɪd/", meaning: "提供"},
-    {id: 23, word: "often", phonetic: "/ˈɔːfn/", meaning: "经常"},
-    {id: 24, word: "learn", phonetic: "/lɜːrn/", meaning: "学习"},
-    {id: 25, word: "idea", phonetic: "/aɪˈdiːə/", meaning: "想法，主意"},
-    {id: 26, word: "understand", phonetic: "/ˌʌndərˈstænd/", meaning: "理解"},
-    {id: 27, word: "person", phonetic: "/ˈpɜːrsn/", meaning: "人"},
-    {id: 28, word: "across", phonetic: "/əˈkrɔːs/", meaning: "穿过，横过"},
-    {id: 29, word: "die", phonetic: "/daɪ/", meaning: "死亡"},
-    {id: 30, word: "fall", phonetic: "/fɔːl/", meaning: "落下，跌倒"},
-    {id: 31, word: "suggest", phonetic: "/səˈdʒest/", meaning: "建议，暗示"},
-    {id: 32, word: "else", phonetic: "/els/", meaning: "其他，另外"},
-    {id: 33, word: "heart", phonetic: "/hɑːrt/", meaning: "心脏，中心"},
-    {id: 34, word: "return", phonetic: "/rɪˈtɜːrn/", meaning: "返回，归还"},
-    {id: 35, word: "break", phonetic: "/breɪk/", meaning: "打破，中断"},
-    {id: 36, word: "model", phonetic: "/ˈmɑːdl/", meaning: "模型，模范"},
-    {id: 37, word: "pick", phonetic: "/pɪk/", meaning: "挑选，拾取"},
-    {id: 38, word: "space", phonetic: "/speɪs/", meaning: "空间，太空"},
-    {id: 39, word: "everyone", phonetic: "/ˈevriwʌn/", meaning: "每个人"},
-    {id: 40, word: "produce", phonetic: "/prəˈduːs/", meaning: "生产，制造"},
-    {id: 41, word: "street", phonetic: "/striːt/", meaning: "街道"},
-    {id: 42, word: "patient", phonetic: "/ˈpeɪʃnt/", meaning: "病人，耐心的"},
-    {id: 43, word: "third", phonetic: "/θɜːrd/", meaning: "第三"},
-    {id: 44, word: "listen", phonetic: "/ˈlɪsn/", meaning: "听"},
-    {id: 45, word: "plant", phonetic: "/plænt/", meaning: "植物，种植"},
-    {id: 46, word: "letter", phonetic: "/ˈletər/", meaning: "信，字母"},
-    {id: 47, word: "risk", phonetic: "/rɪsk/", meaning: "风险"},
-    {id: 48, word: "defense", phonetic: "/dɪˈfens/", meaning: "防御"},
-    {id: 49, word: "rest", phonetic: "/rest/", meaning: "休息，剩余"},
-    {id: 50, word: "push", phonetic: "/pʊʃ/", meaning: "推"},
-    {id: 51, word: "sound", phonetic: "/saʊnd/", meaning: "声音，听起来"},
-    {id: 52, word: "usually", phonetic: "/ˈjuːʒuəli/", meaning: "通常"},
-    {id: 53, word: "lie", phonetic: "/laɪ/", meaning: "躺，说谎"},
-    {id: 54, word: "Tuesday", phonetic: "/ˈtuːzdeɪ/", meaning: "星期二"},
-    {id: 55, word: "physical", phonetic: "/ˈfɪzɪkl/", meaning: "身体的，物理的"},
-    {id: 56, word: "section", phonetic: "/ˈsekʃn/", meaning: "部分，部门"},
-    {id: 57, word: "knowledge", phonetic: "/ˈnɑːlɪdʒ/", meaning: "知识"},
-    {id: 58, word: "indeed", phonetic: "/ɪnˈdiːd/", meaning: "确实"},
-    {id: 59, word: "check", phonetic: "/tʃek/", meaning: "检查，核对"},
-    {id: 60, word: "rather", phonetic: "/ˈræðər/", meaning: "宁愿，相当"},
-    {id: 61, word: "prove", phonetic: "/pruːv/", meaning: "证明"},
-    {id: 62, word: "January", phonetic: "/ˈdʒænjueri/", meaning: "一月"},
-    {id: 63, word: "April", phonetic: "/ˈeɪprəl/", meaning: "四月"},
-    {id: 64, word: "August", phonetic: "/ˈɔːɡəst/", meaning: "八月"},
-    {id: 65, word: "memory", phonetic: "/ˈmeməri/", meaning: "记忆"},
-    {id: 66, word: "radio", phonetic: "/ˈreɪdioʊ/", meaning: "收音机"},
-    {id: 67, word: "avoid", phonetic: "/əˈvɔɪd/", meaning: "避免"},
-    {id: 68, word: "December", phonetic: "/dɪˈsembər/", meaning: "十二月"},
-    {id: 69, word: "traditional", phonetic: "/trəˈdɪʃənl/", meaning: "传统的"},
-    {id: 70, word: "peace", phonetic: "/piːs/", meaning: "和平"},
-    {id: 71, word: "bit", phonetic: "/bɪt/", meaning: "一点，少量"},
-    {id: 72, word: "treat", phonetic: "/triːt/", meaning: "对待，治疗"},
-    {id: 73, word: "style", phonetic: "/staɪl/", meaning: "风格"},
-    {id: 74, word: "challenge", phonetic: "/ˈtʃælɪndʒ/", meaning: "挑战"},
-    {id: 75, word: "property", phonetic: "/ˈprɑːpərti/", meaning: "财产，特性"},
-    {id: 76, word: "detail", phonetic: "/ˈdiːteɪl/", meaning: "细节"},
-    {id: 77, word: "soldier", phonetic: "/ˈsoʊldʒər/", meaning: "士兵"},
-    {id: 78, word: "heat", phonetic: "/hiːt/", meaning: "热，加热"},
-    {id: 79, word: "agent", phonetic: "/ˈeɪdʒənt/", meaning: "代理人，特工"},
-    {id: 80, word: "address", phonetic: "/əˈdres/", meaning: "地址，演讲"},
-    {id: 81, word: "discussion", phonetic: "/dɪˈskʌʃn/", meaning: "讨论"},
-    {id: 82, word: "partner", phonetic: "/ˈpɑːrtnər/", meaning: "伙伴"},
-    {id: 83, word: "safe", phonetic: "/seɪf/", meaning: "安全的"},
-    {id: 84, word: "victim", phonetic: "/ˈvɪktɪm/", meaning: "受害者"},
-    {id: 85, word: "western", phonetic: "/ˈwestərn/", meaning: "西方的"},
-    {id: 86, word: "front", phonetic: "/frʌnt/", meaning: "前面，前线"},
-    {id: 87, word: "successful", phonetic: "/səkˈsesfl/", meaning: "成功的"},
-    {id: 88, word: "relation", phonetic: "/rɪˈleɪʃn/", meaning: "关系"},
-    {id: 89, word: "corner", phonetic: "/ˈkɔːrnər/", meaning: "角落"},
-    {id: 90, word: "safety", phonetic: "/ˈseɪfti/", meaning: "安全"},
-    {id: 91, word: "hurt", phonetic: "/hɜːrt/", meaning: "伤害"},
-    {id: 92, word: "strike", phonetic: "/straɪk/", meaning: "打击，罢工"},
-    {id: 93, word: "client", phonetic: "/ˈklaɪənt/", meaning: "客户"},
-    {id: 94, word: "touch", phonetic: "/tʌtʃ/", meaning: "触摸，接触"},
-    {id: 95, word: "investigation", phonetic: "/ɪnˌvestɪˈɡeɪʃn/", meaning: "调查"},
-    {id: 96, word: "British", phonetic: "/ˈbrɪtɪʃ/", meaning: "英国的"},
-    {id: 97, word: "brain", phonetic: "/breɪn/", meaning: "大脑"},
-    {id: 98, word: "battle", phonetic: "/ˈbætl/", meaning: "战斗"},
-    {id: 99, word: "normal", phonetic: "/ˈnɔːrml/", meaning: "正常的"},
-    {id: 100, word: "university", phonetic: "/ˌjuːnɪˈvɜːrsəti/", meaning: "大学"},
-    {id: 101, word: "wood", phonetic: "/wʊd/", meaning: "木材，树林"},
-    {id: 102, word: "tradition", phonetic: "/trəˈdɪʃn/", meaning: "传统"},
-    {id: 103, word: "communication", phonetic: "/kəˌmjuːnɪˈkeɪʃn/", meaning: "沟通，通讯"},
-    {id: 104, word: "club", phonetic: "/klʌb/", meaning: "俱乐部，棍棒"},
-    {id: 105, word: "shape", phonetic: "/ʃeɪp/", meaning: "形状，塑造"},
-    {id: 106, word: "interested", phonetic: "/ˈɪntrəstɪd/", meaning: "感兴趣的"},
-    {id: 107, word: "reporter", phonetic: "/rɪˈpɔːrtər/", meaning: "记者"},
-    {id: 108, word: "tool", phonetic: "/tuːl/", meaning: "工具"},
-    {id: 109, word: "understanding", phonetic: "/ˌʌndərˈstændɪŋ/", meaning: "理解，谅解"},
-    {id: 110, word: "quick", phonetic: "/kwɪk/", meaning: "快速的"},
-    {id: 111, word: "bright", phonetic: "/braɪt/", meaning: "明亮的，聪明的"},
-    {id: 112, word: "block", phonetic: "/blɒk/", meaning: "街区，阻碍"},
-    {id: 113, word: "collect", phonetic: "/kəˈlekt/", meaning: "收集"},
-    {id: 114, word: "river", phonetic: "/ˈrɪvər/", meaning: "河流"},
-    {id: 115, word: "tomorrow", phonetic: "/təˈmɒrəʊ/", meaning: "明天"},
-    {id: 116, word: "lift", phonetic: "/lɪft/", meaning: "举起，电梯"},
-    {id: 117, word: "limit", phonetic: "/ˈlɪmɪt/", meaning: "限制，界限"},
-    {id: 118, word: "comment", phonetic: "/ˈkɒment/", meaning: "评论"},
-    {id: 119, word: "chairman", phonetic: "/ˈtʃeəmən/", meaning: "主席"},
-    {id: 120, word: "anybody", phonetic: "/ˈenibɒdi/", meaning: "任何人"},
-    {id: 121, word: "influence", phonetic: "/ˈɪnfluəns/", meaning: "影响"},
-    {id: 122, word: "background", phonetic: "/ˈbækɡraʊnd/", meaning: "背景"},
-    {id: 123, word: "blow", phonetic: "/bləʊ/", meaning: "吹，打击"},
-    {id: 124, word: "context", phonetic: "/ˈkɒntekst/", meaning: "上下文，背景"},
-    {id: 125, word: "Indian", phonetic: "/ˈɪndiən/", meaning: "印度的，印度人"},
-    {id: 126, word: "extend", phonetic: "/ɪkˈstend/", meaning: "延伸，扩展"},
-    {id: 127, word: "learning", phonetic: "/ˈlɜːnɪŋ/", meaning: "学习，学问"},
-    {id: 128, word: "victory", phonetic: "/ˈvɪktəri/", meaning: "胜利"},
-    {id: 129, word: "following", phonetic: "/ˈfɒləʊɪŋ/", meaning: "下面的，追随者"},
-    {id: 130, word: "depend", phonetic: "/dɪˈpend/", meaning: "依赖，取决于"},
-    {id: 131, word: "grab", phonetic: "/ɡræb/", meaning: "抓住，攫取"},
-    {id: 132, word: "justice", phonetic: "/ˈdʒʌstɪs/", meaning: "正义，司法"},
-    {id: 133, word: "pair", phonetic: "/peər/", meaning: "一对，一双"},
-    {id: 134, word: "actor", phonetic: "/ˈæktər/", meaning: "演员"},
-    {id: 135, word: "tie", phonetic: "/taɪ/", meaning: "领带，系"},
-    {id: 136, word: "circle", phonetic: "/ˈsɜːkl/", meaning: "圆圈，圈子"},
-    {id: 137, word: "island", phonetic: "/ˈaɪlənd/", meaning: "岛屿"},
-    {id: 138, word: "plastic", phonetic: "/ˈplæstɪk/", meaning: "塑料的，可塑的"},
-    {id: 139, word: "expression", phonetic: "/ɪkˈspreʃn/", meaning: "表达，表情"},
-    {id: 140, word: "welcome", phonetic: "/ˈwelkəm/", meaning: "欢迎"},
-    {id: 141, word: "lots", phonetic: "/lɒts/", meaning: "许多，大量"},
-    {id: 142, word: "Russian", phonetic: "/ˈrʌʃn/", meaning: "俄罗斯的，俄语"},
-    {id: 143, word: "fourth", phonetic: "/fɔːθ/", meaning: "第四"},
-    {id: 144, word: "corporate", phonetic: "/ˈkɔːpərət/", meaning: "公司的，法人的"},
-    {id: 145, word: "urban", phonetic: "/ˈɜːbən/", meaning: "城市的"},
-    {id: 146, word: "favorite", phonetic: "/ˈfeɪvərɪt/", meaning: "最喜欢的"},
-    {id: 147, word: "greatest", phonetic: "/ˈɡreɪtɪst/", meaning: "最伟大的"},
-    {id: 148, word: "soul", phonetic: "/səʊl/", meaning: "灵魂"},
-    {id: 149, word: "presidential", phonetic: "/ˌprezɪˈdenʃl/", meaning: "总统的"},
-    {id: 150, word: "sight", phonetic: "/saɪt/", meaning: "视力，景象"},
-    {id: 151, word: "teaching", phonetic: "/ˈtiːtʃɪŋ/", meaning: "教学，教导"},
-    {id: 152, word: "okay", phonetic: "/əʊˈkeɪ/", meaning: "好的，可以"},
-    {id: 153, word: "empty", phonetic: "/ˈempti/", meaning: "空的"},
-    {id: 154, word: "Iraqi", phonetic: "/ɪˈrɑːki/", meaning: "伊拉克的，伊拉克人"},
-    {id: 155, word: "shadow", phonetic: "/ˈʃædəʊ/", meaning: "影子，阴影"},
-    {id: 156, word: "revenue", phonetic: "/ˈrevənjuː/", meaning: "收入，税收"},
-    {id: 157, word: "bridge", phonetic: "/brɪdʒ/", meaning: "桥梁"},
-    {id: 158, word: "angry", phonetic: "/ˈæŋɡri/", meaning: "生气的"},
-    {id: 159, word: "traffic", phonetic: "/ˈtræfɪk/", meaning: "交通"},
-    {id: 160, word: "chest", phonetic: "/tʃest/", meaning: "胸部，箱子"},
-    {id: 161, word: "museum", phonetic: "/mjuˈziːəm/", meaning: "博物馆"},
-    {id: 162, word: "stress", phonetic: "/stres/", meaning: "压力，强调"},
-    {id: 163, word: "setting", phonetic: "/ˈsetɪŋ/", meaning: "设置，环境"},
-    {id: 164, word: "duty", phonetic: "/ˈdjuːti/", meaning: "责任，职责"},
-    {id: 165, word: "mix", phonetic: "/mɪks/", meaning: "混合"},
-    {id: 166, word: "pilot", phonetic: "/ˈpaɪlət/", meaning: "飞行员"},
-    {id: 167, word: "surgery", phonetic: "/ˈsɜːdʒəri/", meaning: "外科手术"},
-    {id: 168, word: "estimate", phonetic: "/ˈestɪmeɪt/", meaning: "估计，估算"},
-    {id: 169, word: "crazy", phonetic: "/ˈkreɪzi/", meaning: "疯狂的"},
-    {id: 170, word: "rating", phonetic: "/ˈreɪtɪŋ/", meaning: "评级，等级"},
-    {id: 171, word: "German", phonetic: "/ˈdʒɜːmən/", meaning: "德国的，德语"},
-    {id: 172, word: "immediately", phonetic: "/ɪˈmiːdiətli/", meaning: "立即，马上"},
-    {id: 173, word: "typical", phonetic: "/ˈtɪpɪkl/", meaning: "典型的"},
-    {id: 174, word: "host", phonetic: "/həʊst/", meaning: "主人，主持"},
-    {id: 175, word: "row", phonetic: "/rəʊ/", meaning: "排，行，划船"},
-    {id: 176, word: "smart", phonetic: "/smɑːt/", meaning: "聪明的，时髦的"},
-    {id: 177, word: "attract", phonetic: "/əˈtrækt/", meaning: "吸引"},
-    {id: 178, word: "coverage", phonetic: "/ˈkʌvərɪdʒ/", meaning: "覆盖，报道"},
-    {id: 179, word: "fun", phonetic: "/fʌn/", meaning: "乐趣"},
-    {id: 180, word: "reference", phonetic: "/ˈrefrəns/", meaning: "参考，提及"},
-    {id: 181, word: "grant", phonetic: "/ɡrɑːnt/", meaning: "授予，拨款"},
-    {id: 182, word: "winner", phonetic: "/ˈwɪnər/", meaning: "获胜者"},
-    {id: 183, word: "pepper", phonetic: "/ˈpepər/", meaning: "胡椒，辣椒"},
-    {id: 184, word: "dish", phonetic: "/dɪʃ/", meaning: "盘子，菜肴"},
-    {id: 185, word: "gray", phonetic: "/ɡreɪ/", meaning: "灰色的"},
-    {id: 186, word: "criminal", phonetic: "/ˈkrɪmɪnl/", meaning: "罪犯，犯罪的"},
-    {id: 187, word: "holiday", phonetic: "/ˈhɒlədeɪ/", meaning: "假日，假期"},
-    {id: 188, word: "apart", phonetic: "/əˈpɑːt/", meaning: "分开，分离"},
-    {id: 189, word: "increased", phonetic: "/ɪnˈkriːst/", meaning: "增加的"},
-    {id: 190, word: "liberal", phonetic: "/ˈlɪbərəl/", meaning: "自由的，开明的"},
-    {id: 191, word: "invest", phonetic: "/ɪnˈvest/", meaning: "投资"},
-    {id: 192, word: "secretary", phonetic: "/ˈsekrətri/", meaning: "秘书"},
-    {id: 193, word: "grass", phonetic: "/ɡrɑːs/", meaning: "草，草地"},
-    {id: 194, word: "fishing", phonetic: "/ˈfɪʃɪŋ/", meaning: "钓鱼"},
-    {id: 195, word: "sentence", phonetic: "/ˈsentəns/", meaning: "句子，判决"},
-    {id: 196, word: "sharp", phonetic: "/ʃɑːp/", meaning: "锋利的，尖锐的"},
-    {id: 197, word: "proper", phonetic: "/ˈprɒpər/", meaning: "适当的，正确的"},
-    {id: 198, word: "plus", phonetic: "/plʌs/", meaning: "加，加上"},
-    {id: 199, word: "column", phonetic: "/ˈkɒləm/", meaning: "柱子，专栏"},
-    {id: 200, word: "forever", phonetic: "/fərˈevər/", meaning: "永远"},
-    {id: 201, word: "association", phonetic: "/əˌsəʊsiˈeɪʃn/", meaning: "协会，关联"},
-    {id: 202, word: "criticism", phonetic: "/ˈkrɪtɪsɪzəm/", meaning: "批评"},
-    {id: 203, word: "warning", phonetic: "/ˈwɔːnɪŋ/", meaning: "警告"},
-    {id: 204, word: "childhood", phonetic: "/ˈtʃaɪldhʊd/", meaning: "童年"},
-    {id: 205, word: "request", phonetic: "/rɪˈkwest/", meaning: "请求"},
-    {id: 206, word: "prosecutor", phonetic: "/ˈprɒsɪkjuːtər/", meaning: "检察官"},
-    {id: 207, word: "initiative", phonetic: "/ɪˈnɪʃətɪv/", meaning: "主动性，倡议"},
-    {id: 208, word: "schedule", phonetic: "/ˈʃedjuːl/", meaning: "日程，安排"},
-    {id: 209, word: "existing", phonetic: "/ɪɡˈzɪstɪŋ/", meaning: "现有的"},
-    {id: 210, word: "shout", phonetic: "/ʃaʊt/", meaning: "喊叫"},
-    {id: 211, word: "portion", phonetic: "/ˈpɔːʃn/", meaning: "部分，一份"},
-    {id: 212, word: "cop", phonetic: "/kɒp/", meaning: "警察"},
-    {id: 213, word: "print", phonetic: "/prɪnt/", meaning: "打印，印刷"},
-    {id: 214, word: "formal", phonetic: "/ˈfɔːml/", meaning: "正式的"},
-    {id: 215, word: "joint", phonetic: "/dʒɔɪnt/", meaning: "关节，联合的"},
-    {id: 216, word: "opposite", phonetic: "/ˈɒpəzɪt/", meaning: "相反的，对面的"},
-    {id: 217, word: "pot", phonetic: "/pɒt/", meaning: "锅，壶"},
-    {id: 218, word: "phase", phonetic: "/feɪz/", meaning: "阶段，相位"},
-    {id: 219, word: "manufacturer", phonetic: "/ˌmænjuˈfæktʃərər/", meaning: "制造商"},
-    {id: 220, word: "investigator", phonetic: "/ɪnˈvestɪɡeɪtər/", meaning: "调查员"},
-    {id: 221, word: "reduction", phonetic: "/rɪˈdʌkʃn/", meaning: "减少"},
-    {id: 222, word: "iron", phonetic: "/ˈaɪən/", meaning: "铁，熨斗"},
-    {id: 223, word: "volunteer", phonetic: "/ˌvɒlənˈtɪər/", meaning: "志愿者"},
-    {id: 224, word: "marketing", phonetic: "/ˈmɑːkɪtɪŋ/", meaning: "市场营销"},
-    {id: 225, word: "inspire", phonetic: "/ɪnˈspaɪər/", meaning: "激励，启发"},
-    {id: 226, word: "habit", phonetic: "/ˈhæbɪt/", meaning: "习惯"},
-    {id: 227, word: "mystery", phonetic: "/ˈmɪstri/", meaning: "神秘"},
-    {id: 228, word: "symbol", phonetic: "/ˈsɪmbl/", meaning: "象征，符号"},
-    {id: 229, word: "Asian", phonetic: "/ˈeɪʒn/", meaning: "亚洲的，亚洲人"},
-    {id: 230, word: "psychological", phonetic: "/ˌsaɪkəˈlɒdʒɪkl/", meaning: "心理的"},
-    {id: 231, word: "round", phonetic: "/raʊnd/", meaning: "圆的，回合"},
-    {id: 232, word: "constant", phonetic: "/ˈkɒnstənt/", meaning: "持续的，常数"},
-    {id: 233, word: "capable", phonetic: "/ˈkeɪpəbl/", meaning: "有能力的"},
-    {id: 234, word: "crucial", phonetic: "/ˈkruːʃl/", meaning: "关键的"},
-    {id: 235, word: "electronic", phonetic: "/ɪˌlekˈtrɒnɪk/", meaning: "电子的"},
-    {id: 236, word: "prisoner", phonetic: "/ˈprɪzənər/", meaning: "囚犯"},
-    {id: 237, word: "relative", phonetic: "/ˈrelətɪv/", meaning: "亲戚，相对的"},
-    {id: 238, word: "gentleman", phonetic: "/ˈdʒentlmən/", meaning: "绅士"},
-    {id: 239, word: "publication", phonetic: "/ˌpʌblɪˈkeɪʃn/", meaning: "出版，出版物"},
-    {id: 240, word: "exhibition", phonetic: "/ˌeksɪˈbɪʃn/", meaning: "展览"},
-    {id: 241, word: "mayor", phonetic: "/meər/", meaning: "市长"},
-    {id: 242, word: "poem", phonetic: "/ˈpəʊɪm/", meaning: "诗歌"},
-    {id: 243, word: "testing", phonetic: "/ˈtestɪŋ/", meaning: "测试"},
-    {id: 244, word: "elementary", phonetic: "/ˌelɪˈmentri/", meaning: "基础的，初级的"},
-    {id: 245, word: "Latin", phonetic: "/ˈlætɪn/", meaning: "拉丁语，拉丁的"},
-    {id: 246, word: "employment", phonetic: "/ɪmˈplɔɪmənt/", meaning: "就业"},
-    {id: 247, word: "flat", phonetic: "/flæt/", meaning: "平坦的，公寓"},
-    {id: 248, word: "armed", phonetic: "/ɑːmd/", meaning: "武装的"},
-    {id: 249, word: "stake", phonetic: "/steɪk/", meaning: "赌注，利害关系"},
-    {id: 250, word: "activist", phonetic: "/ˈæktɪvɪst/", meaning: "活动家"},
-    {id: 251, word: "hip", phonetic: "/hɪp/", meaning: "臀部"},
-    {id: 252, word: "gang", phonetic: "/ɡæŋ/", meaning: "帮派"},
-    {id: 253, word: "vacation", phonetic: "/vəˈkeɪʃn/", meaning: "假期"},
-    {id: 254, word: "yell", phonetic: "/jel/", meaning: "大喊"},
-    {id: 255, word: "sweep", phonetic: "/swiːp/", meaning: "打扫，扫除"},
-    {id: 256, word: "button", phonetic: "/ˈbʌtn/", meaning: "按钮，纽扣"},
-    {id: 257, word: "fence", phonetic: "/fens/", meaning: "栅栏，篱笆"},
-    {id: 258, word: "burden", phonetic: "/ˈbɜːdn/", meaning: "负担"},
-    {id: 259, word: "resort", phonetic: "/rɪˈzɔːt/", meaning: "度假胜地，求助"},
-    {id: 260, word: "cabinet", phonetic: "/ˈkæbɪnət/", meaning: "内阁，橱柜"},
-    {id: 261, word: "proceed", phonetic: "/prəˈsiːd/", meaning: "继续进行"},
-    {id: 262, word: "overcome", phonetic: "/ˌəʊvəˈkʌm/", meaning: "克服"},
-    {id: 263, word: "adviser", phonetic: "/ədˈvaɪzər/", meaning: "顾问"},
-    {id: 264, word: "whereas", phonetic: "/weərˈæz/", meaning: "然而，尽管"},
-    {id: 265, word: "concentration", phonetic: "/ˌkɒnsnˈtreɪʃn/", meaning: "集中，浓度"},
-    {id: 266, word: "detect", phonetic: "/dɪˈtekt/", meaning: "检测，发现"},
-    {id: 267, word: "hunting", phonetic: "/ˈhʌntɪŋ/", meaning: "狩猎"},
-    {id: 268, word: "surprising", phonetic: "/səˈpraɪzɪŋ/", meaning: "令人惊讶的"},
-    {id: 269, word: "mode", phonetic: "/məʊd/", meaning: "模式，方式"},
-    {id: 270, word: "sink", phonetic: "/sɪŋk/", meaning: "水槽，下沉"},
-    {id: 271, word: "ideal", phonetic: "/aɪˈdiːəl/", meaning: "理想的"},
-    {id: 272, word: "unknown", phonetic: "/ʌnˈnəʊn/", meaning: "未知的"},
-    {id: 273, word: "extensive", phonetic: "/ɪkˈstensɪv/", meaning: "广泛的"},
-    {id: 274, word: "characterize", phonetic: "/ˈkærəktəraɪz/", meaning: "描述，表征"},
-    {id: 275, word: "headquarters", phonetic: "/ˌhedˈkwɔːtəz/", meaning: "总部"},
-    {id: 276, word: "defensive", phonetic: "/dɪˈfensɪv/", meaning: "防御的"},
-    {id: 277, word: "establishment", phonetic: "/ɪˈstæblɪʃmənt/", meaning: "建立，机构"},
-    {id: 278, word: "load", phonetic: "/ləʊd/", meaning: "负载，装载"},
-    {id: 279, word: "deer", phonetic: "/dɪər/", meaning: "鹿"},
-    {id: 280, word: "mere", phonetic: "/mɪər/", meaning: "仅仅的"},
-    {id: 281, word: "leather", phonetic: "/ˈleðər/", meaning: "皮革"},
-    {id: 282, word: "council", phonetic: "/ˈkaʊnsl/", meaning: "理事会，委员会"},
-    {id: 283, word: "satisfy", phonetic: "/ˈsætɪsfaɪ/", meaning: "满足"},
-    {id: 284, word: "tower", phonetic: "/ˈtaʊər/", meaning: "塔"},
-    {id: 285, word: "snow", phonetic: "/snəʊ/", meaning: "雪"},
-    {id: 286, word: "pocket", phonetic: "/ˈpɒkɪt/", meaning: "口袋"},
-    {id: 287, word: "pink", phonetic: "/pɪŋk/", meaning: "粉红色的"},
-    {id: 288, word: "talent", phonetic: "/ˈtælənt/", meaning: "天赋，才能"},
-    {id: 289, word: "exception", phonetic: "/ɪkˈsepʃn/", meaning: "例外"},
-    {id: 290, word: "smooth", phonetic: "/smuːð/", meaning: "平滑的，顺利的"},
-    {id: 291, word: "trick", phonetic: "/trɪk/", meaning: "诡计，技巧"},
-    {id: 292, word: "symptom", phonetic: "/ˈsɪmptəm/", meaning: "症状"},
-    {id: 293, word: "advocate", phonetic: "/ˈædvəkeɪt/", meaning: "提倡，倡导者"},
-    {id: 294, word: "shelf", phonetic: "/ʃelf/", meaning: "架子"},
-    {id: 295, word: "tourist", phonetic: "/ˈtʊərɪst/", meaning: "游客"},
-    {id: 296, word: "friendly", phonetic: "/ˈfrendli/", meaning: "友好的"},
-    {id: 297, word: "tired", phonetic: "/ˈtaɪəd/", meaning: "疲倦的"},
-    {id: 298, word: "toy", phonetic: "/tɔɪ/", meaning: "玩具"},
-    {id: 299, word: "sake", phonetic: "/seɪk/", meaning: "缘故，目的"},
-    {id: 300, word: "climb", phonetic: "/klaɪm/", meaning: "攀登"},
-    {id: 301, word: "frequent", phonetic: "/ˈfriːkwənt/", meaning: "频繁的"},
-    {id: 302, word: "tunnel", phonetic: "/ˈtʌnl/", meaning: "隧道"},
-    {id: 303, word: "musician", phonetic: "/mjuˈzɪʃn/", meaning: "音乐家"},
-    {id: 304, word: "disaster", phonetic: "/dɪˈzɑːstər/", meaning: "灾难"},
-    {id: 305, word: "courage", phonetic: "/ˈkʌrɪdʒ/", meaning: "勇气"},
-    {id: 306, word: "slight", phonetic: "/slaɪt/", meaning: "轻微的"},
-    {id: 307, word: "proud", phonetic: "/praʊd/", meaning: "骄傲的"},
-    {id: 308, word: "gather", phonetic: "/ˈɡæðər/", meaning: "聚集，收集"},
-    {id: 309, word: "honest", phonetic: "/ˈɒnɪst/", meaning: "诚实的"},
-    {id: 310, word: "silly", phonetic: "/ˈsɪli/", meaning: "愚蠢的"},
-    {id: 311, word: "biology", phonetic: "/baɪˈɒlədʒi/", meaning: "生物学"},
-    {id: 312, word: "sensitive", phonetic: "/ˈsensətɪv/", meaning: "敏感的"},
-    {id: 313, word: "cousin", phonetic: "/ˈkʌzn/", meaning: "堂兄弟，表兄弟"},
-    {id: 314, word: "paint", phonetic: "/peɪnt/", meaning: "油漆，绘画"},
-    {id: 315, word: "cloud", phonetic: "/klaʊd/", meaning: "云"},
-    {id: 316, word: "surround", phonetic: "/səˈraʊnd/", meaning: "包围"},
-    {id: 317, word: "luck", phonetic: "/lʌk/", meaning: "运气"},
-    {id: 318, word: "golden", phonetic: "/ˈɡəʊldən/", meaning: "金色的"},
-    {id: 319, word: "engine", phonetic: "/ˈendʒɪn/", meaning: "引擎"},
-    {id: 320, word: "ancient", phonetic: "/ˈeɪnʃənt/", meaning: "古代的"},
-    {id: 321, word: "tiny", phonetic: "/ˈtaɪni/", meaning: "微小的"},
-    {id: 322, word: "calm", phonetic: "/kɑːm/", meaning: "平静的"},
-    {id: 323, word: "cheese", phonetic: "/tʃiːz/", meaning: "奶酪"},
-    {id: 324, word: "examination", phonetic: "/ɪɡˌzæmɪˈneɪʃn/", meaning: "考试，检查"},
-    {id: 325, word: "leaf", phonetic: "/liːf/", meaning: "叶子"},
-    {id: 326, word: "farmer", phonetic: "/ˈfɑːmər/", meaning: "农民"},
-    {id: 327, word: "powder", phonetic: "/ˈpaʊdər/", meaning: "粉末"},
-    {id: 328, word: "wild", phonetic: "/waɪld/", meaning: "野生的"},
-    {id: 329, word: "branch", phonetic: "/brɑːntʃ/", meaning: "树枝，分支"},
-    {id: 330, word: "excited", phonetic: "/ɪkˈsaɪtɪd/", meaning: "兴奋的"},
-    {id: 331, word: "thick", phonetic: "/θɪk/", meaning: "厚的"},
-    {id: 332, word: "solid", phonetic: "/ˈsɒlɪd/", meaning: "固体的，坚实的"},
-    {id: 333, word: "carriage", phonetic: "/ˈkærɪdʒ/", meaning: "马车，车厢"},
-    {id: 334, word: "seldom", phonetic: "/ˈseldəm/", meaning: "很少"},
-    {id: 335, word: "collar", phonetic: "/ˈkɒlər/", meaning: "衣领"},
-    {id: 336, word: "carpet", phonetic: "/ˈkɑːpɪt/", meaning: "地毯"},
-    {id: 337, word: "belt", phonetic: "/belt/", meaning: "腰带"},
-    {id: 338, word: "brave", phonetic: "/breɪv/", meaning: "勇敢的"},
-    {id: 339, word: "interrupt", phonetic: "/ˌɪntəˈrʌpt/", meaning: "打断"},
-    {id: 340, word: "beard", phonetic: "/bɪəd/", meaning: "胡须"},
-    {id: 341, word: "dare", phonetic: "/deər/", meaning: "敢"},
-    {id: 342, word: "orange", phonetic: "/ˈɒrɪndʒ/", meaning: "橙子，橙色的"},
-    {id: 343, word: "tempt", phonetic: "/tempt/", meaning: "诱惑"},
-    {id: 344, word: "chocolate", phonetic: "/ˈtʃɒklət/", meaning: "巧克力"},
-    {id: 345, word: "seldom", phonetic: "/ˈseldəm/", meaning: "很少"},
-    {id: 346, word: "collar", phonetic: "/ˈkɒlər/", meaning: "衣领"},
-    {id: 347, word: "carpet", phonetic: "/ˈkɑːpɪt/", meaning: "地毯"},
-    {id: 348, word: "belt", phonetic: "/belt/", meaning: "腰带"},
-    {id: 349, word: "brave", phonetic: "/breɪv/", meaning: "勇敢的"},
-    {id: 350, word: "interrupt", phonetic: "/ˌɪntəˈrʌpt/", meaning: "打断"},
-    {id: 351, word: "beard", phonetic: "/bɪəd/", meaning: "胡须"},
-    {id: 352, word: "dare", phonetic: "/deər/", meaning: "敢"},
-    {id: 353, word: "orange", phonetic: "/ˈɒrɪndʒ/", meaning: "橙子，橙色的"},
-    {id: 354, word: "tempt", phonetic: "/tempt/", meaning: "诱惑"},
-    {id: 355, word: "chocolate", phonetic: "/ˈtʃɒklət/", meaning: "巧克力"},
-    {id: 356, word: "seldom", phonetic: "/ˈseldəm/", meaning: "很少"},
-    {id: 357, word: "collar", phonetic: "/ˈkɒlər/", meaning: "衣领"},
-    {id: 358, word: "carpet", phonetic: "/ˈkɑːpɪt/", meaning: "地毯"},
-    {id: 359, word: "belt", phonetic: "/belt/", meaning: "腰带"},
-    {id: 360, word: "brave", phonetic: "/breɪv/", meaning: "勇敢的"},
-    {id: 361, word: "interrupt", phonetic: "/ˌɪntəˈrʌpt/", meaning: "打断"},
-    {id: 362, word: "beard", phonetic: "/bɪəd/", meaning: "胡须"},
-    {id: 363, word: "dare", phonetic: "/deər/", meaning: "敢"},
-    {id: 364, word: "orange", phonetic: "/ˈɒrɪndʒ/", meaning: "橙子，橙色的"},
-    {id: 365, word: "tempt", phonetic: "/tempt/", meaning: "诱惑"},
-    {id: 366, word: "chocolate", phonetic: "/ˈtʃɒklət/", meaning: "巧克力"},
-    {id: 367, word: "seldom", phonetic: "/ˈseldəm/", meaning: "很少"},
-    {id: 368, word: "collar", phonetic: "/ˈkɒlər/", meaning: "衣领"},
-    {id: 369, word: "carpet", phonetic: "/ˈkɑːpɪt/", meaning: "地毯"},
-    {id: 370, word: "belt", phonetic: "/belt/", meaning: "腰带"},
-    {id: 371, word: "brave", phonetic: "/breɪv/", meaning: "勇敢的"},
-    {id: 372, word: "interrupt", phonetic: "/ˌɪntəˈrʌpt/", meaning: "打断"},
-    {id: 373, word: "beard", phonetic: "/bɪəd/", meaning: "胡须"},
-    {id: 374, word: "dare", phonetic: "/deər/", meaning: "敢"},
-    {id: 375, word: "orange", phonetic: "/ˈɒrɪndʒ/", meaning: "橙子，橙色的"},
-    {id: 376, word: "tempt", phonetic: "/tempt/", meaning: "诱惑"},
-    {id: 377, word: "chocolate", phonetic: "/ˈtʃɒklət/", meaning: "巧克力"},
-    {id: 378, word: "seldom", phonetic: "/ˈseldəm/", meaning: "很少"},
-    {id: 379, word: "collar", phonetic: "/ˈkɒlər/", meaning: "衣领"},
-    {id: 380, word: "carpet", phonetic: "/ˈkɑːpɪt/", meaning: "地毯"},
-    {id: 381, word: "belt", phonetic: "/belt/", meaning: "腰带"},
-    {id: 382, word: "brave", phonetic: "/breɪv/", meaning: "勇敢的"},
-    {id: 383, word: "interrupt", phonetic: "/ˌɪntəˈrʌpt/", meaning: "打断"},
-    {id: 384, word: "beard", phonetic: "/bɪəd/", meaning: "胡须"},
-    {id: 385, word: "dare", phonetic: "/deər/", meaning: "敢"},
-    {id: 386, word: "orange", phonetic: "/ˈɒrɪndʒ/", meaning: "橙子，橙色的"},
-    {id: 387, word: "tempt", phonetic: "/tempt/", meaning: "诱惑"},
-    {id: 388, word: "chocolate", phonetic: "/ˈtʃɒklət/", meaning: "巧克力"},
-    {id: 389, word: "seldom", phonetic: "/ˈseldəm/", meaning: "很少"},
-    {id: 390, word: "collar", phonetic: "/ˈkɒlər/", meaning: "衣领"},
-    {id: 391, word: "carpet", phonetic: "/ˈkɑːpɪt/", meaning: "地毯"},
-    {id: 392, word: "belt", phonetic: "/belt/", meaning: "腰带"},
-    {id: 393, word: "brave", phonetic: "/breɪv/", meaning: "勇敢的"},
-    {id: 394, word: "interrupt", phonetic: "/ˌɪntəˈrʌpt/", meaning: "打断"},
-    {id: 395, word: "beard", phonetic: "/bɪəd/", meaning: "胡须"},
-    {id: 396, word: "dare", phonetic: "/deər/", meaning: "敢"},
-    {id: 397, word: "orange", phonetic: "/ˈɒrɪndʒ/", meaning: "橙子，橙色的"},
-    {id: 398, word: "tempt", phonetic: "/tempt/", meaning: "诱惑"},
-    {id: 399, word: "chocolate", phonetic: "/ˈtʃɒklət/", meaning: "巧克力"},
-    {id: 400, word: "seldom", phonetic: "/ˈseldəm/", meaning: "很少"}
+        // 单词数据（包含序号、单词、音标、中文含义和自然拼读信息）
+          const words = [
+  {id: 1, word: "for", phonetic: "/fɔːr/", meaning: "为，给，对于", phonics: {regular: true, tip: "f发/f/，or发/ɔːr/，符合自然拼读规则"}},
+  {id: 2, word: "say", phonetic: "/seɪ/", meaning: "说，讲", phonics: {regular: true, tip: "s发/s/，ay发/eɪ/，符合自然拼读规则"}},
+  {id: 3, word: "will", phonetic: "/wɪl/", meaning: "将，愿意，意志", phonics: {regular: true, tip: "w发/w/，i发/ɪ/，ll发/l/，符合自然拼读规则"}},
+  {id: 4, word: "think", phonetic: "/θɪŋk/", meaning: "想，认为", phonics: {regular: true, tip: "th发/θ/，i发/ɪ/，nk发/ŋk/，符合自然拼读规则"}},
+  {id: 5, word: "take", phonetic: "/teɪk/", meaning: "拿，取，接受", phonics: {regular: true, tip: "t发/t/，a发/eɪ/，k发/k/，e不发音，符合自然拼读规则"}},
+  {id: 6, word: "than", phonetic: "/ðæn/", meaning: "比", phonics: {regular: true, tip: "th发/ð/，a发/æ/，n发/n/，符合自然拼读规则"}},
+  {id: 7, word: "our", phonetic: "/ˈaʊər/", meaning: "我们的", phonics: {regular: true, tip: "ou发/aʊ/，r发/ər/，符合自然拼读规则"}},
+  {id: 8, word: "thing", phonetic: "/θɪŋ/", meaning: "事物，东西", phonics: {regular: true, tip: "th发/θ/，i发/ɪ/，ng发/ŋ/，符合自然拼读规则"}},
+  {id: 9, word: "any", phonetic: "/ˈeni/", meaning: "任何", phonics: {regular: true, tip: "a发/e/，n发/n/，y发/i/，符合自然拼读规则"}},
+  {id: 10, word: "after", phonetic: "/ˈæftər/", meaning: "在...之后", phonics: {regular: true, tip: "a发/æ/，f发/f/，t发/t/，er发/ər/，符合自然拼读规则"}},
+  {id: 11, word: "last", phonetic: "/læst/", meaning: "最后，持续", phonics: {regular: true, tip: "l发/l/，a发/æ/，s发/s/，t发/t/，符合自然拼读规则"}},
+  {id: 12, word: "become", phonetic: "/bɪˈkʌm/", meaning: "成为，变得", phonics: {regular: true, tip: "be发/bɪ/，come发/kʌm/，符合自然拼读规则"}},
+  {id: 13, word: "keep", phonetic: "/kiːp/", meaning: "保持，继续", phonics: {regular: true, tip: "k发/k/，ee发/iː/，p发/p/，符合自然拼读规则"}},
+  {id: 14, word: "start", phonetic: "/stɑːrt/", meaning: "开始，出发", phonics: {regular: true, tip: "st发/st/，ar发/ɑːr/，t发/t/，符合自然拼读规则"}},
+  {id: 15, word: "place", phonetic: "/pleɪs/", meaning: "地方，放置", phonics: {regular: true, tip: "p发/p/，l发/l/，a发/eɪ/，c发/s/，e不发音，符合自然拼读规则"}},
+  {id: 16, word: "each", phonetic: "/iːtʃ/", meaning: "每个", phonics: {regular: true, tip: "ea发/iː/，ch发/tʃ/，符合自然拼读规则"}},
+  {id: 17, word: "off", phonetic: "/ɔːf/", meaning: "离开，关闭", phonics: {regular: true, tip: "o发/ɔː/，ff发/f/，符合自然拼读规则"}},
+  {id: 18, word: "point", phonetic: "/pɔɪnt/", meaning: "点，指向", phonics: {regular: true, tip: "p发/p/，oi发/ɔɪ/，n发/n/，t发/t/，符合自然拼读规则"}},
+  {id: 19, word: "before", phonetic: "/bɪˈfɔːr/", meaning: "在...之前", phonics: {regular: true, tip: "be发/bɪ/，fore发/fɔːr/，符合自然拼读规则"}},
+  {id: 20, word: "must", phonetic: "/mʌst/", meaning: "必须", phonics: {regular: true, tip: "m发/m/，u发/ʌ/，s发/s/，t发/t/，符合自然拼读规则"}},
+  {id: 21, word: "though", phonetic: "/ðoʊ/", meaning: "虽然，尽管", phonics: {regular: true, tip: "th发/ð/，ou发/oʊ/，gh不发音，符合自然拼读规则"}},
+  {id: 22, word: "provide", phonetic: "/prəˈvaɪd/", meaning: "提供", phonics: {regular: true, tip: "pro发/prə/，vide发/vaɪd/，符合自然拼读规则"}},
+  {id: 23, word: "often", phonetic: "/ˈɔːfn/", meaning: "经常", phonics: {regular: true, tip: "o发/ɔː/，f发/f/，t发/t/，en发/ən/，符合自然拼读规则"}},
+  {id: 24, word: "learn", phonetic: "/lɜːrn/", meaning: "学习", phonics: {regular: true, tip: "l发/l/，ear发/ɜːr/，n发/n/，符合自然拼读规则"}},
+  {id: 25, word: "idea", phonetic: "/aɪˈdiːə/", meaning: "想法，主意", phonics: {regular: true, tip: "i发/aɪ/，de发/diː/，a发/ə/，符合自然拼读规则"}},
+  {id: 26, word: "understand", phonetic: "/ˌʌndərˈstænd/", meaning: "理解", phonics: {regular: true, tip: "under发/ʌndər/，stand发/stænd/，符合自然拼读规则"}},
+  {id: 27, word: "person", phonetic: "/ˈpɜːrsn/", meaning: "人", phonics: {regular: true, tip: "per发/pɜːr/，son发/sn/，符合自然拼读规则"}},
+  {id: 28, word: "across", phonetic: "/əˈkrɔːs/", meaning: "穿过，横过", phonics: {regular: true, tip: "a发/ə/，cross发/krɔːs/，符合自然拼读规则"}},
+  {id: 29, word: "die", phonetic: "/daɪ/", meaning: "死亡", phonics: {regular: true, tip: "d发/d/，ie发/aɪ/，符合自然拼读规则"}},
+  {id: 30, word: "fall", phonetic: "/fɔːl/", meaning: "落下，跌倒", phonics: {regular: true, tip: "f发/f/，all发/ɔːl/，符合自然拼读规则"}},
+  {id: 31, word: "suggest", phonetic: "/səˈdʒest/", meaning: "建议，暗示", phonics: {regular: true, tip: "sug发/sə/，gest发/dʒest/，符合自然拼读规则"}},
+  {id: 32, word: "else", phonetic: "/els/", meaning: "其他，另外", phonics: {regular: true, tip: "e发/e/，l发/l/，s发/s/，e不发音，符合自然拼读规则"}},
+  {id: 33, word: "heart", phonetic: "/hɑːrt/", meaning: "心脏，中心", phonics: {regular: true, tip: "h发/h/，ear发/ɑːr/，t发/t/，符合自然拼读规则"}},
+  {id: 34, word: "return", phonetic: "/rɪˈtɜːrn/", meaning: "返回，归还", phonics: {regular: true, tip: "re发/rɪ/，turn发/tɜːrn/，符合自然拼读规则"}},
+  {id: 35, word: "break", phonetic: "/breɪk/", meaning: "打破，中断", phonics: {regular: true, tip: "br发/br/，ea发/eɪ/，k发/k/，符合自然拼读规则"}},
+  {id: 36, word: "model", phonetic: "/ˈmɑːdl/", meaning: "模型，模范", phonics: {regular: true, tip: "mo发/mɑː/，del发/dl/，符合自然拼读规则"}},
+  {id: 37, word: "pick", phonetic: "/pɪk/", meaning: "挑选，拾取", phonics: {regular: true, tip: "p发/p/，i发/ɪ/，ck发/k/，符合自然拼读规则"}},
+  {id: 38, word: "space", phonetic: "/speɪs/", meaning: "空间，太空", phonics: {regular: true, tip: "sp发/sp/，a发/eɪ/，c发/s/，e不发音，符合自然拼读规则"}},
+  {id: 39, word: "everyone", phonetic: "/ˈevriwʌn/", meaning: "每个人", phonics: {regular: true, tip: "every发/evri/，one发/wʌn/，符合自然拼读规则"}},
+  {id: 40, word: "produce", phonetic: "/prəˈduːs/", meaning: "生产，制造", phonics: {regular: true, tip: "pro发/prə/，duce发/duːs/，符合自然拼读规则"}},
+  {id: 41, word: "street", phonetic: "/striːt/", meaning: "街道", phonics: {regular: true, tip: "str发/str/，ee发/iː/，t发/t/，符合自然拼读规则"}},
+  {id: 42, word: "patient", phonetic: "/ˈpeɪʃnt/", meaning: "病人，耐心的", phonics: {regular: true, tip: "pa发/peɪ/，tient发/ʃnt/，符合自然拼读规则"}},
+  {id: 43, word: "third", phonetic: "/θɜːrd/", meaning: "第三", phonics: {regular: true, tip: "th发/θ/，ir发/ɜːr/，d发/d/，符合自然拼读规则"}},
+  {id: 44, word: "listen", phonetic: "/ˈlɪsn/", meaning: "听", phonics: {regular: true, tip: "lis发/lɪs/，ten发/tn/，符合自然拼读规则"}},
+  {id: 45, word: "plant", phonetic: "/plænt/", meaning: "植物，种植", phonics: {regular: true, tip: "pl发/pl/，a发/æ/，nt发/nt/，符合自然拼读规则"}},
+  {id: 46, word: "letter", phonetic: "/ˈletər/", meaning: "信，字母", phonics: {regular: true, tip: "let发/let/，ter发/ər/，符合自然拼读规则"}},
+  {id: 47, word: "risk", phonetic: "/rɪsk/", meaning: "风险", phonics: {regular: true, tip: "r发/r/，i发/ɪ/，sk发/sk/，符合自然拼读规则"}},
+  {id: 48, word: "defense", phonetic: "/dɪˈfens/", meaning: "防御", phonics: {regular: true, tip: "de发/dɪ/，fense发/fens/，符合自然拼读规则"}},
+  {id: 49, word: "rest", phonetic: "/rest/", meaning: "休息，剩余", phonics: {regular: true, tip: "r发/r/，e发/e/，st发/st/，符合自然拼读规则"}},
+  {id: 50, word: "push", phonetic: "/pʊʃ/", meaning: "推", phonics: {regular: true, tip: "p发/p/，u发/ʊ/，sh发/ʃ/，符合自然拼读规则"}},
+   {id: 51, word: "sound", phonetic: "/saʊnd/", meaning: "声音，听起来", phonics: {regular: true, tip: "s发/s/，ou发/aʊ/，nd发/nd/，符合自然拼读规则"}},
+  {id: 52, word: "usually", phonetic: "/ˈjuːʒuəli/", meaning: "通常", phonics: {regular: true, tip: "u发/juː/，su发/ʒu/，al发/ə/，ly发/li/，符合自然拼读规则"}},
+  {id: 53, word: "lie", phonetic: "/laɪ/", meaning: "躺，说谎", phonics: {regular: true, tip: "l发/l/，ie发/aɪ/，符合自然拼读规则"}},
+  {id: 54, word: "Tuesday", phonetic: "/ˈtuːzdeɪ/", meaning: "星期二", phonics: {regular: true, tip: "Tu发/tuː/，es发/z/，day发/deɪ/，符合自然拼读规则"}},
+  {id: 55, word: "physical", phonetic: "/ˈfɪzɪkl/", meaning: "身体的，物理的", phonics: {regular: true, tip: "phy发/fɪ/，si发/zɪ/，cal发/kl/，符合自然拼读规则"}},
+  {id: 56, word: "section", phonetic: "/ˈsekʃn/", meaning: "部分，部门", phonics: {regular: true, tip: "sec发/sek/，tion发/ʃn/，符合自然拼读规则"}},
+  {id: 57, word: "knowledge", phonetic: "/ˈnɑːlɪdʒ/", meaning: "知识", phonics: {regular: true, tip: "know发/nɑː/，ledge发/lɪdʒ/，符合自然拼读规则"}},
+  {id: 58, word: "indeed", phonetic: "/ɪnˈdiːd/", meaning: "确实", phonics: {regular: true, tip: "in发/ɪn/，deed发/diːd/，符合自然拼读规则"}},
+  {id: 59, word: "check", phonetic: "/tʃek/", meaning: "检查，核对", phonics: {regular: true, tip: "ch发/tʃ/，e发/e/，ck发/k/，符合自然拼读规则"}},
+  {id: 60, word: "rather", phonetic: "/ˈræðər/", meaning: "宁愿，相当", phonics: {regular: true, tip: "ra发/ræ/，th发/ð/，er发/ər/，符合自然拼读规则"}},
+  {id: 61, word: "prove", phonetic: "/pruːv/", meaning: "证明", phonics: {regular: true, tip: "pr发/pr/，o发/uː/，ve发/v/，符合自然拼读规则"}},
+  {id: 62, word: "January", phonetic: "/ˈdʒænjueri/", meaning: "一月", phonics: {regular: true, tip: "Jan发/dʒæn/，u发/ju/，ary发/eri/，符合自然拼读规则"}},
+  {id: 63, word: "April", phonetic: "/ˈeɪprəl/", meaning: "四月", phonics: {regular: true, tip: "A发/eɪ/，pril发/prəl/，符合自然拼读规则"}},
+  {id: 64, word: "August", phonetic: "/ˈɔːɡəst/", meaning: "八月", phonics: {regular: true, tip: "Au发/ɔː/，gust发/ɡəst/，符合自然拼读规则"}},
+  {id: 65, word: "memory", phonetic: "/ˈmeməri/", meaning: "记忆", phonics: {regular: true, tip: "me发/me/，mo发/mə/，ry发/ri/，符合自然拼读规则"}},
+  {id: 66, word: "radio", phonetic: "/ˈreɪdioʊ/", meaning: "收音机", phonics: {regular: true, tip: "ra发/reɪ/，di发/di/，o发/oʊ/，符合自然拼读规则"}},
+  {id: 67, word: "avoid", phonetic: "/əˈvɔɪd/", meaning: "避免", phonics: {regular: true, tip: "a发/ə/，voi发/vɔɪ/，d发/d/，符合自然拼读规则"}},
+  {id: 68, word: "December", phonetic: "/dɪˈsembər/", meaning: "十二月", phonics: {regular: true, tip: "De发/dɪ/，cem发/sem/，ber发/bər/，符合自然拼读规则"}},
+  {id: 69, word: "traditional", phonetic: "/trəˈdɪʃənl/", meaning: "传统的", phonics: {regular: true, tip: "tra发/trə/，di发/dɪ/，tion发/ʃən/，al发/l/，符合自然拼读规则"}},
+  {id: 70, word: "peace", phonetic: "/piːs/", meaning: "和平", phonics: {regular: true, tip: "p发/p/，ea发/iː/，c发/s/，e不发音，符合自然拼读规则"}},
+  {id: 71, word: "bit", phonetic: "/bɪt/", meaning: "一点，少量", phonics: {regular: true, tip: "b发/b/，i发/ɪ/，t发/t/，符合自然拼读规则"}},
+  {id: 72, word: "treat", phonetic: "/triːt/", meaning: "对待，治疗", phonics: {regular: true, tip: "tr发/tr/，ea发/iː/，t发/t/，符合自然拼读规则"}},
+  {id: 73, word: "style", phonetic: "/staɪl/", meaning: "风格", phonics: {regular: true, tip: "st发/st/，y发/aɪ/，le发/l/，符合自然拼读规则"}},
+  {id: 74, word: "challenge", phonetic: "/ˈtʃælɪndʒ/", meaning: "挑战", phonics: {regular: true, tip: "cha发/tʃæ/，lle发/l/，nge发/ndʒ/，符合自然拼读规则"}},
+  {id: 75, word: "property", phonetic: "/ˈprɑːpərti/", meaning: "财产，特性", phonics: {regular: true, tip: "pro发/prɑː/，per发/pər/，ty发/ti/，符合自然拼读规则"}},
+  {id: 76, word: "detail", phonetic: "/ˈdiːteɪl/", meaning: "细节", phonics: {regular: true, tip: "de发/diː/，tail发/teɪl/，符合自然拼读规则"}},
+  {id: 77, word: "soldier", phonetic: "/ˈsoʊldʒər/", meaning: "士兵", phonics: {regular: true, tip: "sol发/soʊl/，dier发/dʒər/，符合自然拼读规则"}},
+  {id: 78, word: "heat", phonetic: "/hiːt/", meaning: "热，加热", phonics: {regular: true, tip: "h发/h/，ea发/iː/，t发/t/，符合自然拼读规则"}},
+  {id: 79, word: "agent", phonetic: "/ˈeɪdʒənt/", meaning: "代理人，特工", phonics: {regular: true, tip: "a发/eɪ/，gent发/dʒənt/，符合自然拼读规则"}},
+  {id: 80, word: "address", phonetic: "/əˈdres/", meaning: "地址，演讲", phonics: {regular: true, tip: "a发/ə/，ddre发/dre/，ss发/s/，符合自然拼读规则"}},
+  {id: 81, word: "discussion", phonetic: "/dɪˈskʌʃn/", meaning: "讨论", phonics: {regular: true, tip: "dis发/dɪs/，cu发/kʌ/，ssion发/ʃn/，符合自然拼读规则"}},
+  {id: 82, word: "partner", phonetic: "/ˈpɑːrtnər/", meaning: "伙伴", phonics: {regular: true, tip: "part发/pɑːrt/，ner发/nər/，符合自然拼读规则"}},
+  {id: 83, word: "safe", phonetic: "/seɪf/", meaning: "安全的", phonics: {regular: true, tip: "s发/s/，a发/eɪ/，f发/f/，e不发音，符合自然拼读规则"}},
+  {id: 84, word: "victim", phonetic: "/ˈvɪktɪm/", meaning: "受害者", phonics: {regular: true, tip: "vic发/vɪk/，tim发/tɪm/，符合自然拼读规则"}},
+  {id: 85, word: "western", phonetic: "/ˈwestərn/", meaning: "西方的", phonics: {regular: true, tip: "west发/west/，ern发/ərn/，符合自然拼读规则"}},
+  {id: 86, word: "front", phonetic: "/frʌnt/", meaning: "前面，前线", phonics: {regular: true, tip: "fr发/fr/，o发/ʌ/，nt发/nt/，符合自然拼读规则"}},
+  {id: 87, word: "successful", phonetic: "/səkˈsesfl/", meaning: "成功的", phonics: {regular: true, tip: "suc发/sək/，cess发/ses/，ful发/fl/，符合自然拼读规则"}},
+  {id: 88, word: "relation", phonetic: "/rɪˈleɪʃn/", meaning: "关系", phonics: {regular: true, tip: "re发/rɪ/，la发/leɪ/，tion发/ʃn/，符合自然拼读规则"}},
+  {id: 89, word: "corner", phonetic: "/ˈkɔːrnər/", meaning: "角落", phonics: {regular: true, tip: "cor发/kɔːr/，ner发/nər/，符合自然拼读规则"}},
+  {id: 90, word: "safety", phonetic: "/ˈseɪfti/", meaning: "安全", phonics: {regular: true, tip: "safe发/seɪf/，ty发/ti/，符合自然拼读规则"}},
+  {id: 91, word: "hurt", phonetic: "/hɜːrt/", meaning: "伤害", phonics: {regular: true, tip: "h发/h/，ur发/ɜːr/，t发/t/，符合自然拼读规则"}},
+  {id: 92, word: "strike", phonetic: "/straɪk/", meaning: "打击，罢工", phonics: {regular: true, tip: "str发/str/，i发/aɪ/，ke发/k/，符合自然拼读规则"}},
+  {id: 93, word: "client", phonetic: "/ˈklaɪənt/", meaning: "客户", phonics: {regular: true, tip: "cli发/klaɪ/，ent发/ənt/，符合自然拼读规则"}},
+  {id: 94, word: "touch", phonetic: "/tʌtʃ/", meaning: "触摸，接触", phonics: {regular: true, tip: "tou发/tʌ/，ch发/tʃ/，符合自然拼读规则"}},
+  {id: 95, word: "investigation", phonetic: "/ɪnˌvestɪˈɡeɪʃn/", meaning: "调查", phonics: {regular: true, tip: "in发/ɪn/，ves发/ves/，ti发/tɪ/，ga发/ɡeɪ/，tion发/ʃn/，符合自然拼读规则"}},
+  {id: 96, word: "British", phonetic: "/ˈbrɪtɪʃ/", meaning: "英国的", phonics: {regular: true, tip: "Bri发/brɪ/，tish发/tɪʃ/，符合自然拼读规则"}},
+  {id: 97, word: "brain", phonetic: "/breɪn/", meaning: "大脑", phonics: {regular: true, tip: "br发/br/，ai发/eɪ/，n发/n/，符合自然拼读规则"}},
+  {id: 98, word: "battle", phonetic: "/ˈbætl/", meaning: "战斗", phonics: {regular: true, tip: "ba发/bæ/，ttle发/tl/，符合自然拼读规则"}},
+  {id: 99, word: "normal", phonetic: "/ˈnɔːrml/", meaning: "正常的", phonics: {regular: true, tip: "nor发/nɔːr/，mal发/ml/，符合自然拼读规则"}},
+  {id: 100, word: "university", phonetic: "/ˌjuːnɪˈvɜːrsəti/", meaning: "大学", phonics: {regular: true, tip: "u发/juː/，ni发/nɪ/，ver发/vɜːr/，si发/sɪ/，ty发/ti/，符合自然拼读规则"}},
+   {id: 101, word: "wood", phonetic: "/wʊd/", meaning: "木材，树林", phonics: {regular: true, tip: "w发/w/，oo发/ʊ/，d发/d/，符合自然拼读规则"}},
+  {id: 102, word: "tradition", phonetic: "/trəˈdɪʃn/", meaning: "传统", phonics: {regular: true, tip: "tra发/trə/，di发/dɪ/，tion发/ʃn/，符合自然拼读规则"}},
+  {id: 103, word: "communication", phonetic: "/kəˌmjuːnɪˈkeɪʃn/", meaning: "沟通，通讯", phonics: {regular: true, tip: "com发/kə/，mu发/mjuː/，ni发/nɪ/，ca发/keɪ/，tion发/ʃn/，符合自然拼读规则"}},
+  {id: 104, word: "club", phonetic: "/klʌb/", meaning: "俱乐部，棍棒", phonics: {regular: true, tip: "cl发/kl/，u发/ʌ/，b发/b/，符合自然拼读规则"}},
+  {id: 105, word: "shape", phonetic: "/ʃeɪp/", meaning: "形状，塑造", phonics: {regular: true, tip: "sh发/ʃ/，a发/eɪ/，pe发/p/，符合自然拼读规则"}},
+  {id: 106, word: "interested", phonetic: "/ˈɪntrəstɪd/", meaning: "感兴趣的", phonics: {regular: true, tip: "in发/ɪn/，ter发/trə/，est发/stɪd/，符合自然拼读规则"}},
+  {id: 107, word: "reporter", phonetic: "/rɪˈpɔːrtər/", meaning: "记者", phonics: {regular: true, tip: "re发/rɪ/，port发/pɔːrt/，er发/ər/，符合自然拼读规则"}},
+  {id: 108, word: "tool", phonetic: "/tuːl/", meaning: "工具", phonics: {regular: true, tip: "t发/t/，oo发/uː/，l发/l/，符合自然拼读规则"}},
+  {id: 109, word: "understanding", phonetic: "/ˌʌndərˈstændɪŋ/", meaning: "理解，谅解", phonics: {regular: true, tip: "under发/ʌndər/，stand发/stænd/，ing发/ɪŋ/，符合自然拼读规则"}},
+  {id: 110, word: "quick", phonetic: "/kwɪk/", meaning: "快速的", phonics: {regular: true, tip: "qu发/kw/，i发/ɪ/，ck发/k/，符合自然拼读规则"}},
+  {id: 111, word: "bright", phonetic: "/braɪt/", meaning: "明亮的，聪明的", phonics: {regular: true, tip: "br发/br/，igh发/aɪ/，t发/t/，符合自然拼读规则"}},
+  {id: 112, word: "block", phonetic: "/blɒk/", meaning: "街区，阻碍", phonics: {regular: true, tip: "bl发/bl/，o发/ɒ/，ck发/k/，符合自然拼读规则"}},
+  {id: 113, word: "collect", phonetic: "/kəˈlekt/", meaning: "收集", phonics: {regular: true, tip: "col发/kə/，lect发/lekt/，符合自然拼读规则"}},
+  {id: 114, word: "river", phonetic: "/ˈrɪvər/", meaning: "河流", phonics: {regular: true, tip: "ri发/rɪ/，ver发/vər/，符合自然拼读规则"}},
+  {id: 115, word: "tomorrow", phonetic: "/təˈmɒrəʊ/", meaning: "明天", phonics: {regular: true, tip: "to发/tə/，mor发/mɒr/，row发/əʊ/，符合自然拼读规则"}},
+  {id: 116, word: "lift", phonetic: "/lɪft/", meaning: "举起，电梯", phonics: {regular: true, tip: "l发/l/，i发/ɪ/，ft发/ft/，符合自然拼读规则"}},
+  {id: 117, word: "limit", phonetic: "/ˈlɪmɪt/", meaning: "限制，界限", phonics: {regular: true, tip: "li发/lɪ/，mit发/mɪt/，符合自然拼读规则"}},
+  {id: 118, word: "comment", phonetic: "/ˈkɒment/", meaning: "评论", phonics: {regular: true, tip: "com发/kɒ/，ment发/ment/，符合自然拼读规则"}},
+  {id: 119, word: "chairman", phonetic: "/ˈtʃeəmən/", meaning: "主席", phonics: {regular: true, tip: "chair发/tʃeə/，man发/mən/，符合自然拼读规则"}},
+  {id: 120, word: "anybody", phonetic: "/ˈenibɒdi/", meaning: "任何人", phonics: {regular: true, tip: "any发/eni/，body发/bɒdi/，符合自然拼读规则"}},
+  {id: 121, word: "influence", phonetic: "/ˈɪnfluəns/", meaning: "影响", phonics: {regular: true, tip: "in发/ɪn/，flu发/flu/，ence发/əns/，符合自然拼读规则"}},
+  {id: 122, word: "background", phonetic: "/ˈbækɡraʊnd/", meaning: "背景", phonics: {regular: true, tip: "back发/bæk/，ground发/ɡraʊnd/，符合自然拼读规则"}},
+  {id: 123, word: "blow", phonetic: "/bləʊ/", meaning: "吹，打击", phonics: {regular: true, tip: "bl发/bl/，ow发/əʊ/，符合自然拼读规则"}},
+  {id: 124, word: "context", phonetic: "/ˈkɒntekst/", meaning: "上下文，背景", phonics: {regular: true, tip: "con发/kɒn/，text发/tekst/，符合自然拼读规则"}},
+  {id: 125, word: "Indian", phonetic: "/ˈɪndiən/", meaning: "印度的，印度人", phonics: {regular: true, tip: "In发/ɪn/，di发/di/，an发/ən/，符合自然拼读规则"}},
+  {id: 126, word: "extend", phonetic: "/ɪkˈstend/", meaning: "延伸，扩展", phonics: {regular: true, tip: "ex发/ɪk/，tend发/stend/，符合自然拼读规则"}},
+  {id: 127, word: "learning", phonetic: "/ˈlɜːnɪŋ/", meaning: "学习，学问", phonics: {regular: true, tip: "learn发/lɜːn/，ing发/ɪŋ/，符合自然拼读规则"}},
+  {id: 128, word: "victory", phonetic: "/ˈvɪktəri/", meaning: "胜利", phonics: {regular: true, tip: "vic发/vɪk/，tory发/təri/，符合自然拼读规则"}},
+  {id: 129, word: "following", phonetic: "/ˈfɒləʊɪŋ/", meaning: "下面的，追随者", phonics: {regular: true, tip: "fol发/fɒ/，low发/ləʊ/，ing发/ɪŋ/，符合自然拼读规则"}},
+  {id: 130, word: "depend", phonetic: "/dɪˈpend/", meaning: "依赖，取决于", phonics: {regular: true, tip: "de发/dɪ/，pend发/pend/，符合自然拼读规则"}},
+  {id: 131, word: "grab", phonetic: "/ɡræb/", meaning: "抓住，攫取", phonics: {regular: true, tip: "gr发/ɡr/，a发/æ/，b发/b/，符合自然拼读规则"}},
+  {id: 132, word: "justice", phonetic: "/ˈdʒʌstɪs/", meaning: "正义，司法", phonics: {regular: true, tip: "jus发/dʒʌs/，tice发/tɪs/，符合自然拼读规则"}},
+  {id: 133, word: "pair", phonetic: "/peər/", meaning: "一对，一双", phonics: {regular: true, tip: "p发/p/，air发/eər/，符合自然拼读规则"}},
+  {id: 134, word: "actor", phonetic: "/ˈæktər/", meaning: "演员", phonics: {regular: true, tip: "ac发/æk/，tor发/tər/，符合自然拼读规则"}},
+  {id: 135, word: "tie", phonetic: "/taɪ/", meaning: "领带，系", phonics: {regular: true, tip: "t发/t/，ie发/aɪ/，符合自然拼读规则"}},
+  {id: 136, word: "circle", phonetic: "/ˈsɜːkl/", meaning: "圆圈，圈子", phonics: {regular: true, tip: "cir发/sɜːr/，cle发/kl/，符合自然拼读规则"}},
+  {id: 137, word: "island", phonetic: "/ˈaɪlənd/", meaning: "岛屿", phonics: {regular: true, tip: "is发/aɪ/，land发/lənd/，符合自然拼读规则"}},
+  {id: 138, word: "plastic", phonetic: "/ˈplæstɪk/", meaning: "塑料的，可塑的", phonics: {regular: true, tip: "pla发/plæ/，stic发/stɪk/，符合自然拼读规则"}},
+  {id: 139, word: "expression", phonetic: "/ɪkˈspreʃn/", meaning: "表达，表情", phonics: {regular: true, tip: "ex发/ɪk/，press发/spre/，sion发/ʃn/，符合自然拼读规则"}},
+  {id: 140, word: "welcome", phonetic: "/ˈwelkəm/", meaning: "欢迎", phonics: {regular: true, tip: "wel发/wel/，come发/kəm/，符合自然拼读规则"}},
+  {id: 141, word: "lots", phonetic: "/lɒts/", meaning: "许多，大量", phonics: {regular: true, tip: "l发/l/，o发/ɒ/，ts发/ts/，符合自然拼读规则"}},
+  {id: 142, word: "Russian", phonetic: "/ˈrʌʃn/", meaning: "俄罗斯的，俄语", phonics: {regular: true, tip: "Ru发/rʌ/，ssian发/ʃn/，符合自然拼读规则"}},
+  {id: 143, word: "fourth", phonetic: "/fɔːθ/", meaning: "第四", phonics: {regular: true, tip: "four发/fɔːr/，th发/θ/，符合自然拼读规则"}},
+  {id: 144, word: "corporate", phonetic: "/ˈkɔːpərət/", meaning: "公司的，法人的", phonics: {regular: true, tip: "cor发/kɔːr/，po发/pə/，rate发/rət/，符合自然拼读规则"}},
+  {id: 145, word: "urban", phonetic: "/ˈɜːbən/", meaning: "城市的", phonics: {regular: true, tip: "ur发/ɜːr/，ban发/bən/，符合自然拼读规则"}},
+  {id: 146, word: "favorite", phonetic: "/ˈfeɪvərɪt/", meaning: "最喜欢的", phonics: {regular: true, tip: "fa发/feɪ/，vo发/və/，rite发/rɪt/，符合自然拼读规则"}},
+  {id: 147, word: "greatest", phonetic: "/ˈɡreɪtɪst/", meaning: "最伟大的", phonics: {regular: true, tip: "great发/ɡreɪt/，est发/ɪst/，符合自然拼读规则"}},
+  {id: 148, word: "soul", phonetic: "/səʊl/", meaning: "灵魂", phonics: {regular: true, tip: "s发/s/，ou发/əʊ/，l发/l/，符合自然拼读规则"}},
+  {id: 149, word: "presidential", phonetic: "/ˌprezɪˈdenʃl/", meaning: "总统的", phonics: {regular: true, tip: "pre发/pre/，si发/zɪ/，den发/den/，tial发/ʃl/，符合自然拼读规则"}},
+  {id: 150, word: "sight", phonetic: "/saɪt/", meaning: "视力，景象", phonics: {regular: true, tip: "s发/s/，igh发/aɪ/，t发/t/，符合自然拼读规则"}},
+   {id: 151, word: "teaching", phonetic: "/ˈtiːtʃɪŋ/", meaning: "教学，教导", phonics: {regular: true, tip: "tea发/tiː/，ch发/tʃ/，ing发/ɪŋ/，符合自然拼读规则"}},
+  {id: 152, word: "okay", phonetic: "/əʊˈkeɪ/", meaning: "好的，可以", phonics: {regular: true, tip: "o发/əʊ/，kay发/keɪ/，符合自然拼读规则"}},
+  {id: 153, word: "empty", phonetic: "/ˈempti/", meaning: "空的", phonics: {regular: true, tip: "em发/em/，p发/p/，ty发/ti/，符合自然拼读规则"}},
+  {id: 154, word: "Iraqi", phonetic: "/ɪˈrɑːki/", meaning: "伊拉克的，伊拉克人", phonics: {regular: true, tip: "I发/ɪ/，ra发/rɑː/，qi发/ki/，符合自然拼读规则"}},
+  {id: 155, word: "shadow", phonetic: "/ˈʃædəʊ/", meaning: "影子，阴影", phonics: {regular: true, tip: "sha发/ʃæ/，dow发/dəʊ/，符合自然拼读规则"}},
+  {id: 156, word: "revenue", phonetic: "/ˈrevənjuː/", meaning: "收入，税收", phonics: {regular: true, tip: "re发/re/，ve发/və/，nue发/njuː/，符合自然拼读规则"}},
+  {id: 157, word: "bridge", phonetic: "/brɪdʒ/", meaning: "桥梁", phonics: {regular: true, tip: "bri发/brɪ/，dge发/dʒ/，符合自然拼读规则"}},
+  {id: 158, word: "angry", phonetic: "/ˈæŋɡri/", meaning: "生气的", phonics: {regular: true, tip: "an发/æŋ/，gry发/ɡri/，符合自然拼读规则"}},
+  {id: 159, word: "traffic", phonetic: "/ˈtræfɪk/", meaning: "交通", phonics: {regular: true, tip: "tra发/træ/，ffi发/fɪ/，c发/k/，符合自然拼读规则"}},
+  {id: 160, word: "chest", phonetic: "/tʃest/", meaning: "胸部，箱子", phonics: {regular: true, tip: "ch发/tʃ/，e发/e/，st发/st/，符合自然拼读规则"}},
+  {id: 161, word: "museum", phonetic: "/mjuˈziːəm/", meaning: "博物馆", phonics: {regular: true, tip: "mu发/mju/，se发/ziː/，um发/əm/，符合自然拼读规则"}},
+  {id: 162, word: "stress", phonetic: "/stres/", meaning: "压力，强调", phonics: {regular: true, tip: "str发/str/，e发/e/，ss发/s/，符合自然拼读规则"}},
+  {id: 163, word: "setting", phonetic: "/ˈsetɪŋ/", meaning: "设置，环境", phonics: {regular: true, tip: "set发/set/，ting发/ɪŋ/，符合自然拼读规则"}},
+  {id: 164, word: "duty", phonetic: "/ˈdjuːti/", meaning: "责任，职责", phonics: {regular: true, tip: "du发/djuː/，ty发/ti/，符合自然拼读规则"}},
+  {id: 165, word: "mix", phonetic: "/mɪks/", meaning: "混合", phonics: {regular: true, tip: "m发/m/，i发/ɪ/，x发/ks/，符合自然拼读规则"}},
+  {id: 166, word: "pilot", phonetic: "/ˈpaɪlət/", meaning: "飞行员", phonics: {regular: true, tip: "pi发/paɪ/，lot发/lət/，符合自然拼读规则"}},
+  {id: 167, word: "surgery", phonetic: "/ˈsɜːdʒəri/", meaning: "外科手术", phonics: {regular: true, tip: "sur发/sɜːr/，ge发/dʒ/，ry发/əri/，符合自然拼读规则"}},
+  {id: 168, word: "estimate", phonetic: "/ˈestɪmeɪt/", meaning: "估计，估算", phonics: {regular: true, tip: "es发/es/，ti发/tɪ/，mate发/meɪt/，符合自然拼读规则"}},
+  {id: 169, word: "crazy", phonetic: "/ˈkreɪzi/", meaning: "疯狂的", phonics: {regular: true, tip: "cra发/kreɪ/，zy发/zi/，符合自然拼读规则"}},
+  {id: 170, word: "rating", phonetic: "/ˈreɪtɪŋ/", meaning: "评级，等级", phonics: {regular: true, tip: "ra发/reɪ/，ting发/tɪŋ/，符合自然拼读规则"}},
+  {id: 171, word: "German", phonetic: "/ˈdʒɜːmən/", meaning: "德国的，德语", phonics: {regular: true, tip: "Ger发/dʒɜːr/，man发/mən/，符合自然拼读规则"}},
+  {id: 172, word: "immediately", phonetic: "/ɪˈmiːdiətli/", meaning: "立即，马上", phonics: {regular: true, tip: "im发/ɪ/，me发/miː/，di发/di/，ate发/ət/，ly发/li/，符合自然拼读规则"}},
+  {id: 173, word: "typical", phonetic: "/ˈtɪpɪkl/", meaning: "典型的", phonics: {regular: true, tip: "ty发/tɪ/，pi发/pɪ/，cal发/kl/，符合自然拼读规则"}},
+  {id: 174, word: "host", phonetic: "/həʊst/", meaning: "主人，主持", phonics: {regular: true, tip: "h发/h/，o发/əʊ/，st发/st/，符合自然拼读规则"}},
+  {id: 175, word: "row", phonetic: "/rəʊ/", meaning: "排，行，划船", phonics: {regular: true, tip: "r发/r/，ow发/əʊ/，符合自然拼读规则"}},
+  {id: 176, word: "smart", phonetic: "/smɑːt/", meaning: "聪明的，时髦的", phonics: {regular: true, tip: "sm发/sm/，ar发/ɑː/，t发/t/，符合自然拼读规则"}},
+  {id: 177, word: "attract", phonetic: "/əˈtrækt/", meaning: "吸引", phonics: {regular: true, tip: "at发/ə/，tract发/trækt/，符合自然拼读规则"}},
+  {id: 178, word: "coverage", phonetic: "/ˈkʌvərɪdʒ/", meaning: "覆盖，报道", phonics: {regular: true, tip: "co发/kʌ/，ve发/və/，rage发/rɪdʒ/，符合自然拼读规则"}},
+  {id: 179, word: "fun", phonetic: "/fʌn/", meaning: "乐趣", phonics: {regular: true, tip: "f发/f/，u发/ʌ/，n发/n/，符合自然拼读规则"}},
+  {id: 180, word: "reference", phonetic: "/ˈrefrəns/", meaning: "参考，提及", phonics: {regular: true, tip: "re发/re/，fe发/frə/，rence发/ns/，符合自然拼读规则"}},
+  {id: 181, word: "grant", phonetic: "/ɡrɑːnt/", meaning: "授予，拨款", phonics: {regular: true, tip: "gr发/ɡr/，a发/ɑː/，nt发/nt/，符合自然拼读规则"}},
+  {id: 182, word: "winner", phonetic: "/ˈwɪnər/", meaning: "获胜者", phonics: {regular: true, tip: "win发/wɪn/，ner发/ər/，符合自然拼读规则"}},
+  {id: 183, word: "pepper", phonetic: "/ˈpepər/", meaning: "胡椒，辣椒", phonics: {regular: true, tip: "pe发/pe/，pper发/pər/，符合自然拼读规则"}},
+  {id: 184, word: "dish", phonetic: "/dɪʃ/", meaning: "盘子，菜肴", phonics: {regular: true, tip: "d发/d/，i发/ɪ/，sh发/ʃ/，符合自然拼读规则"}},
+  {id: 185, word: "gray", phonetic: "/ɡreɪ/", meaning: "灰色的", phonics: {regular: true, tip: "gr发/ɡr/，ay发/eɪ/，符合自然拼读规则"}},
+  {id: 186, word: "criminal", phonetic: "/ˈkrɪmɪnl/", meaning: "罪犯，犯罪的", phonics: {regular: true, tip: "cri发/krɪ/，mi发/mɪ/，nal发/nl/，符合自然拼读规则"}},
+  {id: 187, word: "holiday", phonetic: "/ˈhɒlədeɪ/", meaning: "假日，假期", phonics: {regular: true, tip: "ho发/hɒ/，li发/lə/，day发/deɪ/，符合自然拼读规则"}},
+  {id: 188, word: "apart", phonetic: "/əˈpɑːt/", meaning: "分开，分离", phonics: {regular: true, tip: "a发/ə/，part发/pɑːt/，符合自然拼读规则"}},
+  {id: 189, word: "increased", phonetic: "/ɪnˈkriːst/", meaning: "增加的", phonics: {regular: true, tip: "in发/ɪn/，crea发/kriː/，sed发/st/，符合自然拼读规则"}},
+  {id: 190, word: "liberal", phonetic: "/ˈlɪbərəl/", meaning: "自由的，开明的", phonics: {regular: true, tip: "li发/lɪ/，be发/bə/，ral发/rəl/，符合自然拼读规则"}},
+  {id: 191, word: "invest", phonetic: "/ɪnˈvest/", meaning: "投资", phonics: {regular: true, tip: "in发/ɪn/，vest发/vest/，符合自然拼读规则"}},
+  {id: 192, word: "secretary", phonetic: "/ˈsekrətri/", meaning: "秘书", phonics: {regular: true, tip: "se发/se/，cre发/krə/，tary发/tri/，符合自然拼读规则"}},
+  {id: 193, word: "grass", phonetic: "/ɡrɑːs/", meaning: "草，草地", phonics: {regular: true, tip: "gr发/ɡr/，a发/ɑː/，ss发/s/，符合自然拼读规则"}},
+  {id: 194, word: "fishing", phonetic: "/ˈfɪʃɪŋ/", meaning: "钓鱼", phonics: {regular: true, tip: "fi发/fɪ/，sh发/ʃ/，ing发/ɪŋ/，符合自然拼读规则"}},
+  {id: 195, word: "sentence", phonetic: "/ˈsentəns/", meaning: "句子，判决", phonics: {regular: true, tip: "sen发/sen/，ten发/tən/，ce发/s/，符合自然拼读规则"}},
+  {id: 196, word: "sharp", phonetic: "/ʃɑːp/", meaning: "锋利的，尖锐的", phonics: {regular: true, tip: "sh发/ʃ/，ar发/ɑː/，p发/p/，符合自然拼读规则"}},
+  {id: 197, word: "proper", phonetic: "/ˈprɒpər/", meaning: "适当的，正确的", phonics: {regular: true, tip: "pro发/prɒ/，per发/pər/，符合自然拼读规则"}},
+  {id: 198, word: "plus", phonetic: "/plʌs/", meaning: "加，加上", phonics: {regular: true, tip: "pl发/pl/，u发/ʌ/，s发/s/，符合自然拼读规则"}},
+  {id: 199, word: "column", phonetic: "/ˈkɒləm/", meaning: "柱子，专栏", phonics: {regular: true, tip: "co发/kɒ/，lum发/ləm/，n不发音，符合自然拼读规则"}},
+  {id: 200, word: "forever", phonetic: "/fərˈevər/", meaning: "永远", phonics: {regular: true, tip: "for发/fər/，ever发/evər/，符合自然拼读规则"}},
+   {id: 201, word: "association", phonetic: "/əˌsəʊsiˈeɪʃn/", meaning: "协会，关联", phonics: {regular: true, tip: "as发/ə/，so发/səʊ/，ci发/si/，ation发/eɪʃn/，符合自然拼读规则"}},
+  {id: 202, word: "criticism", phonetic: "/ˈkrɪtɪsɪzəm/", meaning: "批评", phonics: {regular: true, tip: "cri发/krɪ/，ti发/tɪ/，ci发/sɪ/，sm发/zəm/，符合自然拼读规则"}},
+  {id: 203, word: "warning", phonetic: "/ˈwɔːnɪŋ/", meaning: "警告", phonics: {regular: true, tip: "war发/wɔːr/，ning发/nɪŋ/，符合自然拼读规则"}},
+  {id: 204, word: "childhood", phonetic: "/ˈtʃaɪldhʊd/", meaning: "童年", phonics: {regular: true, tip: "child发/tʃaɪld/，hood发/hʊd/，符合自然拼读规则"}},
+  {id: 205, word: "request", phonetic: "/rɪˈkwest/", meaning: "请求", phonics: {regular: true, tip: "re发/rɪ/，que发/kwe/，st发/st/，符合自然拼读规则"}},
+  {id: 206, word: "prosecutor", phonetic: "/ˈprɒsɪkjuːtər/", meaning: "检察官", phonics: {regular: true, tip: "pro发/prɒ/，se发/sɪ/，cu发/kjuː/，tor发/tər/，符合自然拼读规则"}},
+  {id: 207, word: "initiative", phonetic: "/ɪˈnɪʃətɪv/", meaning: "主动性，倡议", phonics: {regular: true, tip: "in发/ɪ/，i发/ɪ/，tia发/ʃə/，tive发/tɪv/，符合自然拼读规则"}},
+  {id: 208, word: "schedule", phonetic: "/ˈʃedjuːl/", meaning: "日程，安排", phonics: {regular: true, tip: "sche发/ʃe/，du发/djuː/，le发/l/，符合自然拼读规则"}},
+  {id: 209, word: "existing", phonetic: "/ɪɡˈzɪstɪŋ/", meaning: "现有的", phonics: {regular: true, tip: "ex发/ɪɡ/，is发/zɪs/，ting发/tɪŋ/，符合自然拼读规则"}},
+  {id: 210, word: "shout", phonetic: "/ʃaʊt/", meaning: "喊叫", phonics: {regular: true, tip: "sh发/ʃ/，ou发/aʊ/，t发/t/，符合自然拼读规则"}},
+  {id: 211, word: "portion", phonetic: "/ˈpɔːʃn/", meaning: "部分，一份", phonics: {regular: true, tip: "por发/pɔːr/，tion发/ʃn/，符合自然拼读规则"}},
+  {id: 212, word: "cop", phonetic: "/kɒp/", meaning: "警察", phonics: {regular: true, tip: "c发/k/，o发/ɒ/，p发/p/，符合自然拼读规则"}},
+  {id: 213, word: "print", phonetic: "/prɪnt/", meaning: "打印，印刷", phonics: {regular: true, tip: "p发/p/，r发/r/，i发/ɪ/，nt发/nt/，符合自然拼读规则"}},
+  {id: 214, word: "formal", phonetic: "/ˈfɔːml/", meaning: "正式的", phonics: {regular: true, tip: "for发/fɔːr/，mal发/ml/，符合自然拼读规则"}},
+  {id: 215, word: "joint", phonetic: "/dʒɔɪnt/", meaning: "关节，联合的", phonics: {regular: true, tip: "j发/dʒ/，oi发/ɔɪ/，nt发/nt/，符合自然拼读规则"}},
+  {id: 216, word: "opposite", phonetic: "/ˈɒpəzɪt/", meaning: "相反的，对面的", phonics: {regular: true, tip: "op发/ɒ/，po发/pə/，site发/zɪt/，符合自然拼读规则"}},
+  {id: 217, word: "pot", phonetic: "/pɒt/", meaning: "锅，壶", phonics: {regular: true, tip: "p发/p/，o发/ɒ/，t发/t/，符合自然拼读规则"}},
+  {id: 218, word: "phase", phonetic: "/feɪz/", meaning: "阶段，相位", phonics: {regular: true, tip: "ph发/f/，a发/eɪ/，se发/z/，符合自然拼读规则"}},
+  {id: 219, word: "manufacturer", phonetic: "/ˌmænjuˈfæktʃərər/", meaning: "制造商", phonics: {regular: true, tip: "man发/mæn/，u发/ju/，fac发/fæk/，turer发/tʃərər/，符合自然拼读规则"}},
+  {id: 220, word: "investigator", phonetic: "/ɪnˈvestɪɡeɪtər/", meaning: "调查员", phonics: {regular: true, tip: "in发/ɪn/，ves发/ves/，ti发/tɪ/，ga发/ɡeɪ/，tor发/tər/，符合自然拼读规则"}},
+  {id: 221, word: "reduction", phonetic: "/rɪˈdʌkʃn/", meaning: "减少", phonics: {regular: true, tip: "re发/rɪ/，duc发/dʌk/，tion发/ʃn/，符合自然拼读规则"}},
+  {id: 222, word: "iron", phonetic: "/ˈaɪən/", meaning: "铁，熨斗", phonics: {regular: true, tip: "i发/aɪ/，ron发/ən/，符合自然拼读规则"}},
+  {id: 223, word: "volunteer", phonetic: "/ˌvɒlənˈtɪər/", meaning: "志愿者", phonics: {regular: true, tip: "vo发/vɒ/，lun发/lən/，teer发/tɪər/，符合自然拼读规则"}},
+  {id: 224, word: "marketing", phonetic: "/ˈmɑːkɪtɪŋ/", meaning: "市场营销", phonics: {regular: true, tip: "mar发/mɑːr/，ke发/kɪ/，ting发/tɪŋ/，符合自然拼读规则"}},
+  {id: 225, word: "inspire", phonetic: "/ɪnˈspaɪər/", meaning: "激励，启发", phonics: {regular: true, tip: "in发/ɪn/，spire发/spaɪər/，符合自然拼读规则"}},
+  {id: 226, word: "habit", phonetic: "/ˈhæbɪt/", meaning: "习惯", phonics: {regular: true, tip: "ha发/hæ/，bit发/bɪt/，符合自然拼读规则"}},
+  {id: 227, word: "mystery", phonetic: "/ˈmɪstri/", meaning: "神秘", phonics: {regular: true, tip: "mys发/mɪs/，tery发/tri/，符合自然拼读规则"}},
+  {id: 228, word: "symbol", phonetic: "/ˈsɪmbl/", meaning: "象征，符号", phonics: {regular: true, tip: "sym发/sɪm/，bol发/bl/，符合自然拼读规则"}},
+  {id: 229, word: "Asian", phonetic: "/ˈeɪʒn/", meaning: "亚洲的，亚洲人", phonics: {regular: true, tip: "A发/eɪ/，sian发/ʒn/，符合自然拼读规则"}},
+  {id: 230, word: "psychological", phonetic: "/ˌsaɪkəˈlɒdʒɪkl/", meaning: "心理的", phonics: {regular: true, tip: "psy发/saɪ/，cho发/kə/，lo发/lɒ/，gi发/dʒɪ/，cal发/kl/，符合自然拼读规则"}},
+  {id: 231, word: "round", phonetic: "/raʊnd/", meaning: "圆的，回合", phonics: {regular: true, tip: "r发/r/，ou发/aʊ/，nd发/nd/，符合自然拼读规则"}},
+  {id: 232, word: "constant", phonetic: "/ˈkɒnstənt/", meaning: "持续的，常数", phonics: {regular: true, tip: "con发/kɒn/，stant发/stənt/，符合自然拼读规则"}},
+  {id: 233, word: "capable", phonetic: "/ˈkeɪpəbl/", meaning: "有能力的", phonics: {regular: true, tip: "ca发/keɪ/，pa发/pə/，ble发/bl/，符合自然拼读规则"}},
+  {id: 234, word: "crucial", phonetic: "/ˈkruːʃl/", meaning: "关键的", phonics: {regular: true, tip: "cru发/kruː/，cial发/ʃl/，符合自然拼读规则"}},
+  {id: 235, word: "electronic", phonetic: "/ɪˌlekˈtrɒnɪk/", meaning: "电子的", phonics: {regular: true, tip: "e发/ɪ/，lec发/lek/，tro发/trɒ/，nic发/nɪk/，符合自然拼读规则"}},
+  {id: 236, word: "prisoner", phonetic: "/ˈprɪzənər/", meaning: "囚犯", phonics: {regular: true, tip: "pri发/prɪ/，so发/zə/，ner发/nər/，符合自然拼读规则"}},
+  {id: 237, word: "relative", phonetic: "/ˈrelətɪv/", meaning: "亲戚，相对的", phonics: {regular: true, tip: "re发/re/，la发/lə/，tive发/tɪv/，符合自然拼读规则"}},
+  {id: 238, word: "gentleman", phonetic: "/ˈdʒentlmən/", meaning: "绅士", phonics: {regular: true, tip: "gen发/dʒen/，tle发/tl/，man发/mən/，符合自然拼读规则"}},
+  {id: 239, word: "publication", phonetic: "/ˌpʌblɪˈkeɪʃn/", meaning: "出版，出版物", phonics: {regular: true, tip: "pu发/pʌ/，bli发/blɪ/，ca发/keɪ/，tion发/ʃn/，符合自然拼读规则"}},
+  {id: 240, word: "exhibition", phonetic: "/ˌeksɪˈbɪʃn/", meaning: "展览", phonics: {regular: true, tip: "ex发/eks/，hi发/ɪ/，bi发/bɪ/，tion发/ʃn/，符合自然拼读规则"}},
+  {id: 241, word: "mayor", phonetic: "/meər/", meaning: "市长", phonics: {regular: true, tip: "may发/meɪ/，or发/ər/，符合自然拼读规则"}},
+  {id: 242, word: "poem", phonetic: "/ˈpəʊɪm/", meaning: "诗歌", phonics: {regular: true, tip: "po发/pəʊ/，em发/ɪm/，符合自然拼读规则"}},
+  {id: 243, word: "testing", phonetic: "/ˈtestɪŋ/", meaning: "测试", phonics: {regular: true, tip: "tes发/test/，ting发/ɪŋ/，符合自然拼读规则"}},
+  {id: 244, word: "elementary", phonetic: "/ˌelɪˈmentri/", meaning: "基础的，初级的", phonics: {regular: true, tip: "e发/e/，le发/lɪ/，men发/men/，tary发/tri/，符合自然拼读规则"}},
+  {id: 245, word: "Latin", phonetic: "/ˈlætɪn/", meaning: "拉丁语，拉丁的", phonics: {regular: true, tip: "La发/læ/，tin发/tɪn/，符合自然拼读规则"}},
+  {id: 246, word: "employment", phonetic: "/ɪmˈplɔɪmənt/", meaning: "就业", phonics: {regular: true, tip: "em发/ɪm/，ploy发/plɔɪ/，ment发/mənt/，符合自然拼读规则"}},
+  {id: 247, word: "flat", phonetic: "/flæt/", meaning: "平坦的，公寓", phonics: {regular: true, tip: "fl发/fl/，a发/æ/，t发/t/，符合自然拼读规则"}},
+  {id: 248, word: "armed", phonetic: "/ɑːmd/", meaning: "武装的", phonics: {regular: true, tip: "ar发/ɑːr/，m发/m/，ed发/d/，符合自然拼读规则"}},
+  {id: 249, word: "stake", phonetic: "/steɪk/", meaning: "赌注，利害关系", phonics: {regular: true, tip: "st发/st/，a发/eɪ/，ke发/k/，符合自然拼读规则"}},
+  {id: 250, word: "activist", phonetic: "/ˈæktɪvɪst/", meaning: "活动家", phonics: {regular: true, tip: "ac发/æk/，ti发/tɪ/，vis发/vɪs/，t发/t/，符合自然拼读规则"}},
+   {id: 251, word: "hip", phonetic: "/hɪp/", meaning: "臀部", phonics: {regular: true, tip: "h发/h/，i发/ɪ/，p发/p/，符合自然拼读规则"}},
+  {id: 252, word: "gang", phonetic: "/ɡæŋ/", meaning: "帮派", phonics: {regular: true, tip: "g发/ɡ/，a发/æ/，ng发/ŋ/，符合自然拼读规则"}},
+  {id: 253, word: "vacation", phonetic: "/vəˈkeɪʃn/", meaning: "假期", phonics: {regular: true, tip: "va发/və/，ca发/keɪ/，tion发/ʃn/，符合自然拼读规则"}},
+  {id: 254, word: "yell", phonetic: "/jel/", meaning: "大喊", phonics: {regular: true, tip: "y发/j/，e发/e/，ll发/l/，符合自然拼读规则"}},
+  {id: 255, word: "sweep", phonetic: "/swiːp/", meaning: "打扫，扫除", phonics: {regular: true, tip: "sw发/sw/，ee发/iː/，p发/p/，符合自然拼读规则"}},
+  {id: 256, word: "button", phonetic: "/ˈbʌtn/", meaning: "按钮，纽扣", phonics: {regular: true, tip: "bu发/bʌ/，tton发/tn/，符合自然拼读规则"}},
+  {id: 257, word: "fence", phonetic: "/fens/", meaning: "栅栏，篱笆", phonics: {regular: true, tip: "f发/f/，e发/e/，nce发/ns/，符合自然拼读规则"}},
+  {id: 258, word: "burden", phonetic: "/ˈbɜːdn/", meaning: "负担", phonics: {regular: true, tip: "bur发/bɜːr/，den发/dn/，符合自然拼读规则"}},
+  {id: 259, word: "resort", phonetic: "/rɪˈzɔːt/", meaning: "度假胜地，求助", phonics: {regular: true, tip: "re发/rɪ/，sort发/zɔːt/，符合自然拼读规则"}},
+  {id: 260, word: "cabinet", phonetic: "/ˈkæbɪnət/", meaning: "内阁，橱柜", phonics: {regular: true, tip: "ca发/kæ/，bi发/bɪ/，net发/nət/，符合自然拼读规则"}},
+  {id: 261, word: "proceed", phonetic: "/prəˈsiːd/", meaning: "继续进行", phonics: {regular: true, tip: "pro发/prə/，ceed发/siːd/，符合自然拼读规则"}},
+  {id: 262, word: "overcome", phonetic: "/ˌəʊvəˈkʌm/", meaning: "克服", phonics: {regular: true, tip: "over发/əʊvər/，come发/kʌm/，符合自然拼读规则"}},
+  {id: 263, word: "adviser", phonetic: "/ədˈvaɪzər/", meaning: "顾问", phonics: {regular: true, tip: "ad发/əd/，vi发/vaɪ/，ser发/zər/，符合自然拼读规则"}},
+  {id: 264, word: "whereas", phonetic: "/weərˈæz/", meaning: "然而，尽管", phonics: {regular: true, tip: "where发/weər/，as发/æz/，符合自然拼读规则"}},
+  {id: 265, word: "concentration", phonetic: "/ˌkɒnsnˈtreɪʃn/", meaning: "集中，浓度", phonics: {regular: true, tip: "con发/kɒn/，cen发/sn/，tra发/treɪ/，tion发/ʃn/，符合自然拼读规则"}},
+  {id: 266, word: "detect", phonetic: "/dɪˈtekt/", meaning: "检测，发现", phonics: {regular: true, tip: "de发/dɪ/，tect发/tekt/，符合自然拼读规则"}},
+  {id: 267, word: "hunting", phonetic: "/ˈhʌntɪŋ/", meaning: "狩猎", phonics: {regular: true, tip: "hun发/hʌn/，ting发/tɪŋ/，符合自然拼读规则"}},
+  {id: 268, word: "surprising", phonetic: "/səˈpraɪzɪŋ/", meaning: "令人惊讶的", phonics: {regular: true, tip: "sur发/sər/，pri发/praɪ/，sing发/zɪŋ/，符合自然拼读规则"}},
+  {id: 269, word: "mode", phonetic: "/məʊd/", meaning: "模式，方式", phonics: {regular: true, tip: "m发/m/，o发/əʊ/，de发/d/，符合自然拼读规则"}},
+  {id: 270, word: "sink", phonetic: "/sɪŋk/", meaning: "水槽，下沉", phonics: {regular: true, tip: "s发/s/，i发/ɪ/，nk发/ŋk/，符合自然拼读规则"}},
+  {id: 271, word: "ideal", phonetic: "/aɪˈdiːəl/", meaning: "理想的", phonics: {regular: true, tip: "i发/aɪ/，de发/diː/，al发/əl/，符合自然拼读规则"}},
+  {id: 272, word: "unknown", phonetic: "/ʌnˈnəʊn/", meaning: "未知的", phonics: {regular: true, tip: "un发/ʌn/，known发/nəʊn/，符合自然拼读规则"}},
+  {id: 273, word: "extensive", phonetic: "/ɪkˈstensɪv/", meaning: "广泛的", phonics: {regular: true, tip: "ex发/ɪk/，ten发/sten/，sive发/sɪv/，符合自然拼读规则"}},
+  {id: 274, word: "characterize", phonetic: "/ˈkærəktəraɪz/", meaning: "描述，表征", phonics: {regular: true, tip: "cha发/kæ/，rac发/rək/，te发/tə/，rize发/raɪz/，符合自然拼读规则"}},
+  {id: 275, word: "headquarters", phonetic: "/ˌhedˈkwɔːtəz/", meaning: "总部", phonics: {regular: true, tip: "head发/hed/，quar发/kwɔːr/，ters发/təz/，符合自然拼读规则"}},
+  {id: 276, word: "defensive", phonetic: "/dɪˈfensɪv/", meaning: "防御的", phonics: {regular: true, tip: "de发/dɪ/，fen发/fen/，sive发/sɪv/，符合自然拼读规则"}},
+  {id: 277, word: "establishment", phonetic: "/ɪˈstæblɪʃmənt/", meaning: "建立，机构", phonics: {regular: true, tip: "es发/ɪ/，tab发/stæb/，lish发/lɪʃ/，ment发/mənt/，符合自然拼读规则"}},
+  {id: 278, word: "load", phonetic: "/ləʊd/", meaning: "负载，装载", phonics: {regular: true, tip: "l发/l/，oa发/əʊ/，d发/d/，符合自然拼读规则"}},
+  {id: 279, word: "deer", phonetic: "/dɪər/", meaning: "鹿", phonics: {regular: true, tip: "d发/d/，ee发/ɪə/，r发/r/，符合自然拼读规则"}},
+  {id: 280, word: "mere", phonetic: "/mɪər/", meaning: "仅仅的", phonics: {regular: true, tip: "m发/m/，ere发/ɪə/，符合自然拼读规则"}},
+  {id: 281, word: "leather", phonetic: "/ˈleðər/", meaning: "皮革", phonics: {regular: true, tip: "lea发/le/，th发/ð/，er发/ər/，符合自然拼读规则"}},
+  {id: 282, word: "council", phonetic: "/ˈkaʊnsl/", meaning: "理事会，委员会", phonics: {regular: true, tip: "coun发/kaʊn/，cil发/sl/，符合自然拼读规则"}},
+  {id: 283, word: "scared", phonetic: "/skeəd/", meaning: "害怕的", phonics: {regular: true, tip: "sc发/sk/，are发/eə/，d发/d/，符合自然拼读规则"}},
+  {id: 284, word: "pipe", phonetic: "/paɪp/", meaning: "管道", phonics: {regular: true, tip: "p发/p/，i发/aɪ/，pe发/p/，符合自然拼读规则"}},
+  {id: 285, word: "obligation", phonetic: "/ˌɒblɪˈɡeɪʃn/", meaning: "义务", phonics: {regular: true, tip: "ob发/ɒb/，li发/lɪ/，ga发/ɡeɪ/，tion发/ʃn/，符合自然拼读规则"}},
+  {id: 286, word: "closer", phonetic: "/ˈkləʊsər/", meaning: "更近的", phonics: {regular: true, tip: "clo发/kləʊ/，ser发/sər/，符合自然拼读规则"}},
+  {id: 287, word: "given", phonetic: "/ˈɡɪvn/", meaning: "给定的", phonics: {regular: true, tip: "gi发/ɡɪ/，ven发/vn/，符合自然拼读规则"}},
+  {id: 288, word: "fighter", phonetic: "/ˈfaɪtər/", meaning: "战士", phonics: {regular: true, tip: "fight发/faɪt/，er发/ər/，符合自然拼读规则"}},
+  {id: 289, word: "infant", phonetic: "/ˈɪnfənt/", meaning: "婴儿", phonics: {regular: true, tip: "in发/ɪn/，fant发/fənt/，符合自然拼读规则"}},
+  {id: 290, word: "derive", phonetic: "/dɪˈraɪv/", meaning: "源自", phonics: {regular: true, tip: "de发/dɪ/，rive发/raɪv/，符合自然拼读规则"}},
+  {id: 291, word: "humor", phonetic: "/ˈhjuːmər/", meaning: "幽默", phonics: {regular: true, tip: "hu发/hjuː/，mor发/mər/，符合自然拼读规则"}},
+  {id: 292, word: "proportion", phonetic: "/prəˈpɔːʃn/", meaning: "比例", phonics: {regular: true, tip: "pro发/prə/，por发/pɔːr/，tion发/ʃn/，符合自然拼读规则"}},
+  {id: 293, word: "conviction", phonetic: "/kənˈvɪkʃn/", meaning: "信念，定罪", phonics: {regular: true, tip: "con发/kən/，vic发/vɪk/，tion发/ʃn/，符合自然拼读规则"}},
+  {id: 294, word: "proposed", phonetic: "/prəˈpəʊzd/", meaning: "提议的", phonics: {regular: true, tip: "pro发/prə/，pos发/pəʊz/，ed发/d/，符合自然拼读规则"}},
+  {id: 295, word: "membership", phonetic: "/ˈmembəʃɪp/", meaning: "会员资格", phonics: {regular: true, tip: "mem发/mem/，ber发/bə/，ship发/ʃɪp/，符合自然拼读规则"}},
+  {id: 296, word: "lifestyle", phonetic: "/ˈlaɪfstaɪl/", meaning: "生活方式", phonics: {regular: true, tip: "life发/laɪf/，style发/staɪl/，符合自然拼读规则"}},
+  {id: 297, word: "helicopter", phonetic: "/ˈhelɪkɒptər/", meaning: "直升机", phonics: {regular: true, tip: "he发/he/，li发/lɪ/，cop发/kɒp/，ter发/tər/，符合自然拼读规则"}},
+  {id: 298, word: "cholesterol", phonetic: "/kəˈlestərɒl/", meaning: "胆固醇", phonics: {regular: true, tip: "cho发/kə/，les发/les/，ter发/tər/，ol发/ɒl/，符合自然拼读规则"}},
+  {id: 299, word: "laboratory", phonetic: "/ləˈbɒrətri/", meaning: "实验室", phonics: {regular: true, tip: "la发/lə/，bo发/bɒ/，ra发/rə/，tory发/tri/，符合自然拼读规则"}},
+  {id: 300, word: "demonstration", phonetic: "/ˌdemənˈstreɪʃn/", meaning: "演示，示威", phonics: {regular: true, tip: "de发/de/，mon发/mən/，stra发/streɪ/，tion发/ʃn/，符合自然拼读规则"}},
+   {id: 301, word: "medication", phonetic: "/ˌmedɪˈkeɪʃn/", meaning: "药物", phonics: {regular: true, tip: "me发/me/，di发/dɪ/，ca发/keɪ/，tion发/ʃn/，符合自然拼读规则"}},
+  {id: 302, word: "pitch", phonetic: "/pɪtʃ/", meaning: "投掷，音高", phonics: {regular: true, tip: "p发/p/，i发/ɪ/，tch发/tʃ/，符合自然拼读规则"}},
+  {id: 303, word: "register", phonetic: "/ˈredʒɪstər/", meaning: "登记，注册", phonics: {regular: true, tip: "re发/re/，gis发/dʒɪs/，ter发/tər/，符合自然拼读规则"}},
+  {id: 304, word: "hungry", phonetic: "/ˈhʌŋɡri/", meaning: "饥饿的", phonics: {regular: true, tip: "hun发/hʌŋ/，gry发/ɡri/，符合自然拼读规则"}},
+  {id: 305, word: "shrug", phonetic: "/ʃrʌɡ/", meaning: "耸肩", phonics: {regular: true, tip: "shr发/ʃr/，u发/ʌ/，g发/ɡ/，符合自然拼读规则"}},
+  {id: 306, word: "shower", phonetic: "/ˈʃaʊər/", meaning: "淋浴，阵雨", phonics: {regular: true, tip: "sh发/ʃ/，ow发/aʊ/，er发/ər/，符合自然拼读规则"}},
+  {id: 307, word: "instructor", phonetic: "/ɪnˈstrʌktər/", meaning: "教练，讲师", phonics: {regular: true, tip: "in发/ɪn/，struc发/strʌk/，tor发/tər/，符合自然拼读规则"}},
+  {id: 308, word: "mortgage", phonetic: "/ˈmɔːɡɪdʒ/", meaning: "抵押贷款", phonics: {regular: true, tip: "mor发/mɔːr/，tga发/ɡɪdʒ/，符合自然拼读规则"}},
+  {id: 309, word: "wise", phonetic: "/waɪz/", meaning: "明智的", phonics: {regular: true, tip: "w发/w/，i发/aɪ/，se发/z/，符合自然拼读规则"}},
+  {id: 310, word: "fighting", phonetic: "/ˈfaɪtɪŋ/", meaning: "战斗", phonics: {regular: true, tip: "fight发/faɪt/，ing发/ɪŋ/，符合自然拼读规则"}},
+  {id: 311, word: "worried", phonetic: "/ˈwʌrid/", meaning: "担心的", phonics: {regular: true, tip: "wor发/wʌ/，ried发/rid/，符合自然拼读规则"}},
+  {id: 312, word: "cooking", phonetic: "/ˈkʊkɪŋ/", meaning: "烹饪", phonics: {regular: true, tip: "cook发/kʊk/，ing发/ɪŋ/，符合自然拼读规则"}},
+  {id: 313, word: "killing", phonetic: "/ˈkɪlɪŋ/", meaning: "杀戮", phonics: {regular: true, tip: "kill发/kɪl/，ing发/ɪŋ/，符合自然拼读规则"}},
+  {id: 314, word: "headline", phonetic: "/ˈhedlaɪn/", meaning: "头条新闻", phonics: {regular: true, tip: "head发/hed/，line发/laɪn/，符合自然拼读规则"}},
+  {id: 315, word: "intensity", phonetic: "/ɪnˈtensəti/", meaning: "强度", phonics: {regular: true, tip: "in发/ɪn/，ten发/ten/，si发/sə/，ty发/ti/，符合自然拼读规则"}},
+  {id: 316, word: "margin", phonetic: "/ˈmɑːdʒɪn/", meaning: "边缘，利润", phonics: {regular: true, tip: "mar发/mɑːr/，gin发/dʒɪn/，符合自然拼读规则"}},
+  {id: 317, word: "brick", phonetic: "/brɪk/", meaning: "砖块", phonics: {regular: true, tip: "br发/br/，i发/ɪ/，ck发/k/，符合自然拼读规则"}},
+  {id: 318, word: "painter", phonetic: "/ˈpeɪntər/", meaning: "画家", phonics: {regular: true, tip: "paint发/peɪnt/，er发/ər/，符合自然拼读规则"}},
+  {id: 319, word: "swear", phonetic: "/sweər/", meaning: "发誓", phonics: {regular: true, tip: "sw发/sw/，ear发/eə/，符合自然拼读规则"}},
+  {id: 320, word: "soccer", phonetic: "/ˈsɒkər/", meaning: "足球", phonics: {regular: true, tip: "so发/sɒ/，ccer发/kər/，符合自然拼读规则"}},
+  {id: 321, word: "virtue", phonetic: "/ˈvɜːtʃuː/", meaning: "美德", phonics: {regular: true, tip: "vir发/vɜːr/，tue发/tʃuː/，符合自然拼读规则"}},
+  {id: 322, word: "rail", phonetic: "/reɪl/", meaning: "铁轨", phonics: {regular: true, tip: "r发/r/，ai发/eɪ/，l发/l/，符合自然拼读规则"}},
+  {id: 323, word: "boyfriend", phonetic: "/ˈbɔɪfrend/", meaning: "男朋友", phonics: {regular: true, tip: "boy发/bɔɪ/，friend发/frend/，符合自然拼读规则"}},
+  {id: 324, word: "norm", phonetic: "/nɔːm/", meaning: "规范", phonics: {regular: true, tip: "n发/n/，or发/ɔː/，m发/m/，符合自然拼读规则"}},
+  {id: 325, word: "salmon", phonetic: "/ˈsæmən/", meaning: "三文鱼", phonics: {regular: true, tip: "sal发/sæ/，mon发/mən/，符合自然拼读规则"}},
+  {id: 326, word: "magic", phonetic: "/ˈmædʒɪk/", meaning: "魔法", phonics: {regular: true, tip: "ma发/mæ/，gic发/dʒɪk/，符合自然拼读规则"}},
+  {id: 327, word: "stem", phonetic: "/stem/", meaning: "茎，阻止", phonics: {regular: true, tip: "st发/st/，e发/e/，m发/m/，符合自然拼读规则"}},
+  {id: 328, word: "log", phonetic: "/lɒɡ/", meaning: "原木，记录", phonics: {regular: true, tip: "l发/l/，o发/ɒ/，g发/ɡ/，符合自然拼读规则"}},
+  {id: 329, word: "compound", phonetic: "/ˈkɒmpaʊnd/", meaning: "化合物", phonics: {regular: true, tip: "com发/kɒm/，pound发/paʊnd/，符合自然拼读规则"}},
+  {id: 330, word: "drinking", phonetic: "/ˈdrɪŋkɪŋ/", meaning: "饮用", phonics: {regular: true, tip: "drink发/drɪŋk/，ing发/ɪŋ/，符合自然拼读规则"}},
+  {id: 331, word: "ethical", phonetic: "/ˈeθɪkl/", meaning: "道德的", phonics: {regular: true, tip: "e发/e/，thi发/θɪ/，cal发/kl/，符合自然拼读规则"}},
+  {id: 332, word: "slam", phonetic: "/slæm/", meaning: "猛击", phonics: {regular: true, tip: "sl发/sl/，a发/æ/，m发/m/，符合自然拼读规则"}},
+  {id: 333, word: "closet", phonetic: "/ˈklɒzɪt/", meaning: "壁橱", phonics: {regular: true, tip: "clo发/klɒ/，set发/zɪt/，符合自然拼读规则"}},
+  {id: 334, word: "retail", phonetic: "/ˈriːteɪl/", meaning: "零售", phonics: {regular: true, tip: "re发/riː/，tail发/teɪl/，符合自然拼读规则"}},
+  {id: 335, word: "rumor", phonetic: "/ˈruːmər/", meaning: "谣言", phonics: {regular: true, tip: "ru发/ruː/，mor发/mər/，符合自然拼读规则"}},
+  {id: 336, word: "developer", phonetic: "/dɪˈveləpər/", meaning: "开发者", phonics: {regular: true, tip: "de发/dɪ/，ve发/ve/，lo发/lə/，per发/pər/，符合自然拼读规则"}},
+  {id: 337, word: "dose", phonetic: "/dəʊs/", meaning: "剂量", phonics: {regular: true, tip: "d发/d/，o发/əʊ/，se发/s/，符合自然拼读规则"}},
+  {id: 338, word: "sixth", phonetic: "/sɪksθ/", meaning: "第六", phonics: {regular: true, tip: "six发/sɪks/，th发/θ/，符合自然拼读规则"}},
+  {id: 339, word: "trunk", phonetic: "/trʌŋk/", meaning: "树干，行李箱", phonics: {regular: true, tip: "tr发/tr/，u发/ʌ/，nk发/ŋk/，符合自然拼读规则"}},
+  {id: 340, word: "legislative", phonetic: "/ˈledʒɪslətɪv/", meaning: "立法的", phonics: {regular: true, tip: "le发/le/，gis发/dʒɪs/，la发/lə/，tive发/tɪv/，符合自然拼读规则"}},
+  {id: 341, word: "enforce", phonetic: "/ɪnˈfɔːs/", meaning: "执行", phonics: {regular: true, tip: "en发/ɪn/，force发/fɔːs/，符合自然拼读规则"}},
+  {id: 342, word: "fraud", phonetic: "/frɔːd/", meaning: "欺诈", phonics: {regular: true, tip: "fr发/fr/，au发/ɔː/，d发/d/，符合自然拼读规则"}},
+  {id: 343, word: "monster", phonetic: "/ˈmɒnstər/", meaning: "怪物", phonics: {regular: true, tip: "mon发/mɒn/，ster发/stər/，符合自然拼读规则"}},
+  {id: 344, word: "motive", phonetic: "/ˈməʊtɪv/", meaning: "动机", phonics: {regular: true, tip: "mo发/məʊ/，tive发/tɪv/，符合自然拼读规则"}},
+  {id: 345, word: "ownership", phonetic: "/ˈəʊnəʃɪp/", meaning: "所有权", phonics: {regular: true, tip: "owner发/əʊnə/，ship发/ʃɪp/，符合自然拼读规则"}},
+  {id: 346, word: "drain", phonetic: "/dreɪn/", meaning: "排水", phonics: {regular: true, tip: "dr发/dr/，ai发/eɪ/，n发/n/，符合自然拼读规则"}},
+  {id: 347, word: "warrior", phonetic: "/ˈwɒriər/", meaning: "战士", phonics: {regular: true, tip: "war发/wɒ/，ri发/ri/，or发/ər/，符合自然拼读规则"}},
+  {id: 348, word: "temple", phonetic: "/ˈtempl/", meaning: "寺庙", phonics: {regular: true, tip: "tem发/tem/，ple发/pl/，符合自然拼读规则"}},
+  {id: 349, word: "domain", phonetic: "/dəˈmeɪn/", meaning: "领域", phonics: {regular: true, tip: "do发/də/，main发/meɪn/，符合自然拼读规则"}},
+  {id: 350, word: "dump", phonetic: "/dʌmp/", meaning: "倾倒", phonics: {regular: true, tip: "d发/d/，u发/ʌ/，mp发/mp/，符合自然拼读规则"}},
+   {id: 351, word: "continuing", phonetic: "/kənˈtɪnjuːɪŋ/", meaning: "持续的", phonics: {regular: true, tip: "con发/kən/，tin发/tɪn/，u发/juː/，ing发/ɪŋ/，符合自然拼读规则"}},
+  {id: 352, word: "dancer", phonetic: "/ˈdɑːnsər/", meaning: "舞者", phonics: {regular: true, tip: "dan发/dɑːn/，cer发/sər/，符合自然拼读规则"}},
+  {id: 353, word: "virtual", phonetic: "/ˈvɜːtʃuəl/", meaning: "虚拟的", phonics: {regular: true, tip: "vir发/vɜːr/，tu发/tʃu/，al发/əl/，符合自然拼读规则"}},
+  {id: 354, word: "prize", phonetic: "/praɪz/", meaning: "奖品", phonics: {regular: true, tip: "pr发/pr/，i发/aɪ/，ze发/z/，符合自然拼读规则"}},
+  {id: 355, word: "grip", phonetic: "/ɡrɪp/", meaning: "紧握", phonics: {regular: true, tip: "gr发/ɡr/，i发/ɪ/，p发/p/，符合自然拼读规则"}},
+  {id: 356, word: "freshman", phonetic: "/ˈfreʃmən/", meaning: "大一新生", phonics: {regular: true, tip: "fresh发/freʃ/，man发/mən/，符合自然拼读规则"}},
+  {id: 357, word: "driving", phonetic: "/ˈdraɪvɪŋ/", meaning: "驾驶", phonics: {regular: true, tip: "driv发/draɪv/，ing发/ɪŋ/，符合自然拼读规则"}},
+  {id: 358, word: "uncertainty", phonetic: "/ʌnˈsɜːtnti/", meaning: "不确定性", phonics: {regular: true, tip: "un发/ʌn/，cer发/sɜːr/，tain发/tn/，ty发/ti/，符合自然拼读规则"}},
+  {id: 359, word: "reserve", phonetic: "/rɪˈzɜːv/", meaning: "保留，预订", phonics: {regular: true, tip: "re发/rɪ/，serve发/zɜːv/，符合自然拼读规则"}},
+  {id: 360, word: "behavioral", phonetic: "/bɪˈheɪvjərəl/", meaning: "行为的", phonics: {regular: true, tip: "be发/bɪ/，hav发/heɪv/，ior发/jər/，al发/əl/，符合自然拼读规则"}},
+  {id: 361, word: "residence", phonetic: "/ˈrezɪdəns/", meaning: "住所", phonics: {regular: true, tip: "re发/re/，si发/zɪ/，dence发/dəns/，符合自然拼读规则"}},
+  {id: 362, word: "pleasant", phonetic: "/ˈpleznt/", meaning: "令人愉快的", phonics: {regular: true, tip: "plea发/ple/，sant发/znt/，符合自然拼读规则"}},
+  {id: 363, word: "frozen", phonetic: "/ˈfrəʊzn/", meaning: "冷冻的", phonics: {regular: true, tip: "fro发/frəʊ/，zen发/zn/，符合自然拼读规则"}},
+  {id: 364, word: "bounce", phonetic: "/baʊns/", meaning: "弹跳", phonics: {regular: true, tip: "b发/b/，ou发/aʊ/，nce发/ns/，符合自然拼读规则"}},
+  {id: 365, word: "attraction", phonetic: "/əˈtrækʃn/", meaning: "吸引力", phonics: {regular: true, tip: "at发/ə/，trac发/træk/，tion发/ʃn/，符合自然拼读规则"}},
+  {id: 366, word: "invisible", phonetic: "/ɪnˈvɪzəbl/", meaning: "看不见的", phonics: {regular: true, tip: "in发/ɪn/，vi发/vɪ/，si发/zə/，ble发/bl/，符合自然拼读规则"}},
+  {id: 367, word: "rider", phonetic: "/ˈraɪdər/", meaning: "骑手", phonics: {regular: true, tip: "rid发/raɪd/，er发/ər/，符合自然拼读规则"}},
+  {id: 368, word: "carbohydrate", phonetic: "/ˌkɑːbəʊˈhaɪdreɪt/", meaning: "碳水化合物", phonics: {regular: true, tip: "car发/kɑːr/，bo发/bəʊ/，hy发/haɪ/，drate发/dreɪt/，符合自然拼读规则"}},
+  {id: 369, word: "crawl", phonetic: "/krɔːl/", meaning: "爬行", phonics: {regular: true, tip: "cr发/kr/，aw发/ɔː/，l发/l/，符合自然拼读规则"}},
+  {id: 370, word: "provided", phonetic: "/prəˈvaɪdɪd/", meaning: "假如，提供", phonics: {regular: true, tip: "pro发/prə/，vid发/vaɪd/，ed发/ɪd/，符合自然拼读规则"}},
+  {id: 371, word: "pit", phonetic: "/pɪt/", meaning: "坑", phonics: {regular: true, tip: "p发/p/，i发/ɪ/，t发/t/，符合自然拼读规则"}},
+  {id: 372, word: "doorway", phonetic: "/ˈdɔːweɪ/", meaning: "门口", phonics: {regular: true, tip: "door发/dɔːr/，way发/weɪ/，符合自然拼读规则"}},
+  {id: 373, word: "oral", phonetic: "/ˈɔːrəl/", meaning: "口头的", phonics: {regular: true, tip: "or发/ɔːr/，al发/əl/，符合自然拼读规则"}},
+  {id: 374, word: "reporting", phonetic: "/rɪˈpɔːtɪŋ/", meaning: "报告", phonics: {regular: true, tip: "re发/rɪ/，port发/pɔːt/，ing发/ɪŋ/，符合自然拼读规则"}},
+  {id: 375, word: "indicator", phonetic: "/ˈɪndɪkeɪtər/", meaning: "指示器", phonics: {regular: true, tip: "in发/ɪn/，di发/dɪ/，ca发/keɪ/，tor发/tər/，符合自然拼读规则"}},
+  {id: 376, word: "starting", phonetic: "/ˈstɑːtɪŋ/", meaning: "开始", phonics: {regular: true, tip: "start发/stɑːt/，ing发/ɪŋ/，符合自然拼读规则"}},
+  {id: 377, word: "parade", phonetic: "/pəˈreɪd/", meaning: "游行", phonics: {regular: true, tip: "pa发/pə/，rade发/reɪd/，符合自然拼读规则"}},
+  {id: 378, word: "accounting", phonetic: "/əˈkaʊntɪŋ/", meaning: "会计", phonics: {regular: true, tip: "ac发/ə/，count发/kaʊnt/，ing发/ɪŋ/，符合自然拼读规则"}},
+  {id: 379, word: "entity", phonetic: "/ˈentəti/", meaning: "实体", phonics: {regular: true, tip: "en发/en/，ti发/tə/，ty发/ti/，符合自然拼读规则"}},
+  {id: 380, word: "vanish", phonetic: "/ˈvænɪʃ/", meaning: "消失", phonics: {regular: true, tip: "va发/væ/，nish发/nɪʃ/，符合自然拼读规则"}},
+  {id: 381, word: "banking", phonetic: "/ˈbæŋkɪŋ/", meaning: "银行业", phonics: {regular: true, tip: "bank发/bæŋk/，ing发/ɪŋ/，符合自然拼读规则"}},
+  {id: 382, word: "civic", phonetic: "/ˈsɪvɪk/", meaning: "公民的", phonics: {regular: true, tip: "ci发/sɪ/，vic发/vɪk/，符合自然拼读规则"}},
+  {id: 383, word: "scary", phonetic: "/ˈskeəri/", meaning: "可怕的", phonics: {regular: true, tip: "sca发/skeə/，ry发/ri/，符合自然拼读规则"}},
+  {id: 384, word: "toilet", phonetic: "/ˈtɔɪlət/", meaning: "厕所", phonics: {regular: true, tip: "toi发/tɔɪ/，let发/lət/，符合自然拼读规则"}},
+  {id: 385, word: "precious", phonetic: "/ˈpreʃəs/", meaning: "珍贵的", phonics: {regular: true, tip: "pre发/pre/，ci发/ʃ/，ous发/əs/，符合自然拼读规则"}},
+  {id: 386, word: "gathering", phonetic: "/ˈɡæðərɪŋ/", meaning: "聚集", phonics: {regular: true, tip: "gath发/ɡæð/，er发/ər/，ing发/ɪŋ/，符合自然拼读规则"}},
+  {id: 387, word: "silly", phonetic: "/ˈsɪli/", meaning: "愚蠢的", phonics: {regular: true, tip: "si发/sɪ/，lly发/li/，符合自然拼读规则"}},
+  {id: 388, word: "kit", phonetic: "/kɪt/", meaning: "工具包", phonics: {regular: true, tip: "k发/k/，i发/ɪ/，t发/t/，符合自然拼读规则"}},
+  {id: 389, word: "fool", phonetic: "/fuːl/", meaning: "傻瓜", phonics: {regular: true, tip: "f发/f/，oo发/uː/，l发/l/，符合自然拼读规则"}},
+  {id: 390, word: "coastal", phonetic: "/ˈkəʊstl/", meaning: "沿海的", phonics: {regular: true, tip: "coa发/kəʊ/，stal发/stl/，符合自然拼读规则"}},
+  {id: 391, word: "sentiment", phonetic: "/ˈsentɪmənt/", meaning: "情绪", phonics: {regular: true, tip: "sen发/sen/，ti发/tɪ/，ment发/mənt/，符合自然拼读规则"}},
+  {id: 392, word: "mate", phonetic: "/meɪt/", meaning: "伙伴", phonics: {regular: true, tip: "m发/m/，a发/eɪ/，te发/t/，符合自然拼读规则"}},
+  {id: 393, word: "bid", phonetic: "/bɪd/", meaning: "出价", phonics: {regular: true, tip: "b发/b/，i发/ɪ/，d发/d/，符合自然拼读规则"}},
+  {id: 394, word: "loyalty", phonetic: "/ˈlɔɪəlti/", meaning: "忠诚", phonics: {regular: true, tip: "loy发/lɔɪ/，al发/əl/，ty发/ti/，符合自然拼读规则"}},
+  {id: 395, word: "slap", phonetic: "/slæp/", meaning: "拍打", phonics: {regular: true, tip: "sl发/sl/，a发/æ/，p发/p/，符合自然拼读规则"}},
+  {id: 396, word: "tackle", phonetic: "/ˈtækl/", meaning: "处理，抢断", phonics: {regular: true, tip: "ta发/tæ/，ckle发/kl/，符合自然拼读规则"}},
+  {id: 397, word: "parental", phonetic: "/pəˈrentl/", meaning: "父母的", phonics: {regular: true, tip: "pa发/pə/，ren发/ren/，tal发/tl/，符合自然拼读规则"}},
+  {id: 398, word: "seventh", phonetic: "/ˈsevnθ/", meaning: "第七", phonics: {regular: true, tip: "seven发/sevn/，th发/θ/，符合自然拼读规则"}},
+  {id: 399, word: "stadium", phonetic: "/ˈsteɪdiəm/", meaning: "体育场", phonics: {regular: true, tip: "sta发/steɪ/，di发/di/，um发/əm/，符合自然拼读规则"}},
+  {id: 400, word: "tropical", phonetic: "/ˈtrɒpɪkl/", meaning: "热带的", phonics: {regular: true, tip: "tro发/trɒ/，pi发/pɪ/，cal发/kl/，符合自然拼读规则"}}
+
 ];
 
         // DOM元素
@@ -789,17 +909,24 @@ const words = [
         const markWrongBtn = document.getElementById('mark-wrong-btn');
         const practiceModeBtn = document.getElementById('practice-mode');
         const examModeBtn = document.getElementById('exam-mode');
+        const blankModeBtn = document.getElementById('blank-mode');
         const startRangeInput = document.getElementById('start-range');
         const endRangeInput = document.getElementById('end-range');
         const wordDisplay = document.getElementById('word-display');
+        const blankWordDisplay = document.getElementById('blank-word-display');
         const answerDisplay = document.getElementById('answer-display');
         const wordInfo = document.getElementById('word-info');
         const wordNumber = document.getElementById('word-number');
         const wordPhonetic = document.getElementById('word-phonetic');
         const wordMeaning = document.getElementById('word-meaning');
+        const wordPhonics = document.getElementById('word-phonics');
         const progressText = document.getElementById('progress-text');
         const wrongWordsPanel = document.getElementById('wrong-words-panel');
         const wrongWordsList = document.getElementById('wrong-words-list');
+        const userInputArea = document.getElementById('user-input-area');
+        const userInput = document.getElementById('user-input');
+        const checkBtn = document.getElementById('check-btn');
+        const resultFeedback = document.getElementById('result-feedback');
 
         // 状态变量
         let currentWordIndex = -1;
@@ -807,7 +934,12 @@ const words = [
         let availableIndices = [];
         let wrongWords = [];
         let isPracticeMode = true;
+        let isExamMode = false;
+        let isBlankMode = false;
         let isAnswerVisible = true;
+        let isSpeaking = false;
+        let currentBlankWord = ''; // 当前填空模式的单词
+        let blankPositions = []; // 填空位置
 
         // 初始化
         function init() {
@@ -817,8 +949,15 @@ const words = [
             showAnswerBtn.addEventListener('click', toggleAnswer);
             nextBtn.addEventListener('click', nextWord);
             markWrongBtn.addEventListener('click', markWrongWord);
-            practiceModeBtn.addEventListener('click', () => setMode(true));
-            examModeBtn.addEventListener('click', () => setMode(false));
+            practiceModeBtn.addEventListener('click', () => setMode('practice'));
+            examModeBtn.addEventListener('click', () => setMode('exam'));
+            blankModeBtn.addEventListener('click', () => setMode('blank'));
+            checkBtn.addEventListener('click', checkAnswer);
+            userInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    checkAnswer();
+                }
+            });
             
             // 设置范围输入限制
             startRangeInput.addEventListener('change', validateRange);
@@ -829,42 +968,159 @@ const words = [
         }
 
         // 设置模式
-        function setMode(isPractice) {
-            isPracticeMode = isPractice;
+        function setMode(mode) {
+            isPracticeMode = mode === 'practice';
+            isExamMode = mode === 'exam';
+            isBlankMode = mode === 'blank';
+            
+            // 更新按钮状态
+            practiceModeBtn.classList.toggle('active', isPracticeMode);
+            examModeBtn.classList.toggle('active', isExamMode);
+            blankModeBtn.classList.toggle('active', isBlankMode);
             
             if (isPracticeMode) {
-                practiceModeBtn.classList.add('active');
-                examModeBtn.classList.remove('active');
-                
                 // 练习模式：默认显示答案
                 isAnswerVisible = true;
                 showAnswerBtn.textContent = "隐藏答案";
                 if (currentWordIndex !== -1) {
                     showAnswer();
                 }
-            } else {
-                practiceModeBtn.classList.remove('active');
-                examModeBtn.classList.add('active');
-                
+            } else if (isExamMode) {
                 // 考试模式：默认隐藏答案
                 isAnswerVisible = false;
                 showAnswerBtn.textContent = "显示答案";
                 if (currentWordIndex !== -1) {
                     hideAnswer();
                 }
+            } else if (isBlankMode) {
+                // 填空模式：隐藏答案，显示填空界面
+                isAnswerVisible = false;
+                showAnswerBtn.textContent = "显示答案";
+                if (currentWordIndex !== -1) {
+                    hideAnswer();
+                    showBlankWord();
+                }
+            }
+            
+            // 更新界面显示
+            updateDisplayForMode();
+        }
+
+        // 根据模式更新显示
+        function updateDisplayForMode() {
+            if (isBlankMode) {
+                wordDisplay.classList.add('hidden');
+                blankWordDisplay.classList.remove('hidden');
+                userInputArea.classList.remove('hidden');
+                answerDisplay.classList.add('hidden');
+                wordInfo.classList.add('hidden');
+            } else {
+                wordDisplay.classList.remove('hidden');
+                blankWordDisplay.classList.add('hidden');
+                userInputArea.classList.add('hidden');
+                if (isAnswerVisible) {
+                    answerDisplay.classList.remove('hidden');
+                    wordInfo.classList.remove('hidden');
+                }
+            }
+        }
+
+        // 生成填空单词
+        function generateBlankWord(word) {
+            const length = word.length;
+            // 根据单词长度决定显示字母数量
+            let showCount;
+            if (length <= 3) {
+                showCount = 1; // 短单词显示1个字母
+            } else if (length <= 6) {
+                showCount = 2; // 中等长度显示2个字母
+            } else {
+                showCount = 3; // 长单词显示3个字母
+            }
+            
+            // 随机选择要显示的字母位置
+            const positions = [];
+            while (positions.length < showCount) {
+                const pos = Math.floor(Math.random() * length);
+                if (!positions.includes(pos)) {
+                    positions.push(pos);
+                }
+            }
+            positions.sort((a, b) => a - b);
+            
+            // 生成填空显示
+            let displayHTML = '';
+            for (let i = 0; i < length; i++) {
+                if (positions.includes(i)) {
+                    displayHTML += `<span class="shown-char">${word[i]}</span>`;
+                } else {
+                    displayHTML += `<span class="blank-char"></span>`;
+                }
+            }
+            
+            return {
+                display: displayHTML,
+                positions: positions
+            };
+        }
+
+        // 显示填空单词
+        function showBlankWord() {
+            if (currentWordIndex === -1 || !words[currentWordIndex]) return;
+            
+            const currentWord = words[currentWordIndex].word;
+            const blankInfo = generateBlankWord(currentWord);
+            blankWordDisplay.innerHTML = blankInfo.display;
+            blankPositions = blankInfo.positions;
+            currentBlankWord = currentWord;
+            
+            // 清空输入和反馈
+            userInput.value = '';
+            resultFeedback.textContent = '';
+            resultFeedback.className = 'result-feedback';
+        }
+
+        // 检查答案（填空模式）
+        function checkAnswer() {
+            const userAnswer = userInput.value.trim().toLowerCase();
+            const correctAnswer = currentBlankWord.toLowerCase();
+            
+            if (!userAnswer) {
+                resultFeedback.textContent = '请输入答案';
+                resultFeedback.className = 'result-feedback incorrect';
+                return;
+            }
+            
+            if (userAnswer === correctAnswer) {
+                resultFeedback.textContent = '✓ 回答正确！';
+                resultFeedback.className = 'result-feedback correct';
+                // 自动显示答案
+                setTimeout(() => {
+                    showAnswer();
+                }, 1000);
+            } else {
+                resultFeedback.textContent = '✗ 回答错误，请再试一次';
+                resultFeedback.className = 'result-feedback incorrect';
             }
         }
 
         // 切换答案显示状态
         function toggleAnswer() {
-            if (isAnswerVisible) {
-                hideAnswer();
-                showAnswerBtn.textContent = "显示答案";
-            } else {
+            if (isBlankMode) {
+                // 填空模式下直接显示答案
                 showAnswer();
+                isAnswerVisible = true;
                 showAnswerBtn.textContent = "隐藏答案";
+            } else {
+                if (isAnswerVisible) {
+                    hideAnswer();
+                    showAnswerBtn.textContent = "显示答案";
+                } else {
+                    showAnswer();
+                    showAnswerBtn.textContent = "隐藏答案";
+                }
+                isAnswerVisible = !isAnswerVisible;
             }
-            isAnswerVisible = !isAnswerVisible;
         }
 
         // 验证范围输入
@@ -900,12 +1156,25 @@ const words = [
             
             // 创建可用索引数组
             availableIndices = [];
-            for (let i = start - 1; i < end; i++) {
-                availableIndices.push(i);
+            for (let i = start - 1; i < end && i < words.length; i++) {
+                if (i >= 0 && words[i]) {
+                    availableIndices.push(i);
+                }
             }
             
-            // 打乱数组以实现随机顺序
-            shuffleArray(availableIndices);
+            if (availableIndices.length === 0) {
+                alert('没有找到符合条件的单词，请调整范围');
+                return;
+            }
+            
+            // 根据模式决定是否打乱顺序
+            if (isPracticeMode) {
+                // 练习模式：保持顺序，不打乱
+                // availableIndices 已经是有序的
+            } else {
+                // 考试模式和填空模式：打乱数组以实现随机顺序
+                shuffleArray(availableIndices);
+            }
             
             // 重置当前索引
             currentWordIndex = -1;
@@ -931,52 +1200,113 @@ const words = [
                 return;
             }
             
-            // 获取下一个单词索引
-            currentWordIndex = availableIndices.pop();
+            // 获取下一个单词索引 - 根据模式决定获取方式
+            if (isPracticeMode) {
+                // 练习模式：从前往后顺序获取（shift）
+                currentWordIndex = availableIndices.shift();
+            } else {
+                // 考试模式和填空模式：随机获取（pop）
+                currentWordIndex = availableIndices.pop();
+            }
+            
+            
+            // 确保当前单词存在
+            if (!words[currentWordIndex]) {
+                console.error(`单词索引 ${currentWordIndex} 不存在`);
+                nextWord();
+                return;
+            }
             
             // 显示单词
             wordDisplay.textContent = "?";
             answerDisplay.textContent = words[currentWordIndex].word;
             
-            // 根据模式设置答案显示状态
+            // 根据模式设置显示
             if (isPracticeMode) {
-                // 练习模式：默认显示答案
                 showAnswer();
                 isAnswerVisible = true;
                 showAnswerBtn.textContent = "隐藏答案";
-            } else {
-                // 考试模式：默认隐藏答案
+            } else if (isExamMode) {
                 hideAnswer();
+                isAnswerVisible = false;
+                showAnswerBtn.textContent = "显示答案";
+            } else if (isBlankMode) {
+                hideAnswer();
+                showBlankWord();
                 isAnswerVisible = false;
                 showAnswerBtn.textContent = "显示答案";
             }
             
             // 自动朗读单词
+            // if (isPracticeMode) {
+            //     speakWordWithPhonics();
+            // } else {
+                
+            // }
             speakWord();
-            
             // 更新进度文本
             progressText.textContent = `测试中: 单词 ${currentRange.start}-${currentRange.end} (剩余: ${availableIndices.length})`;
         }
 
-        // 朗读单词
-        function speakWord() {
-            if (currentWordIndex === -1) {
+        // 朗读单词（带自然拼读解释）- 练习模式使用
+        function speakWordWithPhonics() {
+            if (currentWordIndex === -1 || !words[currentWordIndex]) {
                 alert('请先开始测试');
                 return;
             }
             
+            if (isSpeaking) return;
+            isSpeaking = true;
+            
+            const word = words[currentWordIndex].word;
+            const phonicsTip = words[currentWordIndex].phonics.tip;
+            
+            const wordUtterance = new SpeechSynthesisUtterance(word);
+            wordUtterance.lang = 'en-GB';
+            wordUtterance.rate = 0.8;
+            
+            // wordUtterance.onend = function() {
+            //     setTimeout(() => {
+            //         const phonicsUtterance = new SpeechSynthesisUtterance(phonicsTip);
+            //         phonicsUtterance.lang = 'zh-CN';
+            //         phonicsUtterance.rate = 0.8;
+                    
+            //         phonicsUtterance.onend = function() {
+            //             isSpeaking = false;
+            //         };
+                    
+            //         window.speechSynthesis.speak(phonicsUtterance);
+            //     }, 500);
+            // };
+            
+            window.speechSynthesis.speak(wordUtterance);
+        }
+
+        // 朗读单词（仅单词）
+        function speakWord() {
+            if (currentWordIndex === -1 || !words[currentWordIndex]) {
+                alert('请先开始测试');
+                return;
+            }
+            
+            if (isSpeaking) return;
+            isSpeaking = true;
+            
             const word = words[currentWordIndex].word;
             const utterance = new SpeechSynthesisUtterance(word);
-            utterance.lang = 'en-GB'; // 英式发音
-            utterance.rate = 0.8; // 更慢的语速，适合小学生
+            utterance.lang = 'en-GB';
+            utterance.rate = 0.8;
             
-            // 使用Web Speech API朗读单词
+            utterance.onend = function() {
+                isSpeaking = false;
+            };
+            
             window.speechSynthesis.speak(utterance);
         }
 
         // 显示答案
         function showAnswer() {
-            if (currentWordIndex === -1) {
+            if (currentWordIndex === -1 || !words[currentWordIndex]) {
                 alert('请先开始测试');
                 return;
             }
@@ -991,6 +1321,18 @@ const words = [
             wordNumber.textContent = currentWord.id;
             wordPhonetic.textContent = currentWord.phonetic;
             wordMeaning.textContent = currentWord.meaning;
+            
+            // 显示自然拼读信息
+            const phonicsInfo = currentWord.phonics;
+            let phonicsHTML = '';
+            if (phonicsInfo.regular) {
+                phonicsHTML = `<span class="phonics-regular">✓ 符合自然拼读规则</span>`;
+            } else {
+                phonicsHTML = `<span class="phonics-irregular">⚠ 不符合自然拼读规则</span>`;
+            }
+            phonicsHTML += `<div class="phonics-tip">${phonicsInfo.tip}</div>`;
+            wordPhonics.innerHTML = phonicsHTML;
+            
             wordInfo.classList.remove('hidden');
             
             // 在显示答案时，隐藏问号
@@ -1006,14 +1348,13 @@ const words = [
 
         // 标记错误单词
         function markWrongWord() {
-            if (currentWordIndex === -1) {
+            if (currentWordIndex === -1 || !words[currentWordIndex]) {
                 alert('请先开始测试');
                 return;
             }
             
             const currentWord = words[currentWordIndex];
             
-            // 检查是否已经标记过
             if (!wrongWords.some(item => item.id === currentWord.id)) {
                 wrongWords.push(currentWord);
                 updateWrongWordsPanel();
