@@ -1315,7 +1315,7 @@
             const phonicsTip = words[currentWordIndex].phonics.tip;
             
             const wordUtterance = new SpeechSynthesisUtterance(word);
-            wordUtterance.lang = 'en-GB';
+            wordUtterance.lang = 'en-US';
             wordUtterance.rate = 0.8;
             
             // wordUtterance.onend = function() {
@@ -1347,7 +1347,7 @@
             
             const word = words[currentWordIndex].word;
             const utterance = new SpeechSynthesisUtterance(word);
-            utterance.lang = 'en-GB';
+            utterance.lang = 'en-US';
             utterance.rate = 0.8;
             
             utterance.onend = function() {
