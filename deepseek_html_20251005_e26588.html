@@ -1085,10 +1085,8 @@
             let showCount;
             if (length <= 3) {
                 showCount = 1; // 短单词显示1个字母
-            } else if (length <= 6) {
-                showCount = 2; // 中等长度显示2个字母
             } else {
-                showCount = 3; // 长单词显示3个字母
+                showCount = length - 2; // 默认只隐藏两个
             }
             
             // 随机选择要显示的字母位置
